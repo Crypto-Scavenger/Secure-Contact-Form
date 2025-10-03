@@ -146,7 +146,7 @@ class SCF_Admin {
 										type="email" 
 										name="recipient_email_1" 
 										id="recipient_email_1"
-										value="<?php echo esc_attr( $settings['recipient_email_1'] ); ?>"
+										value="<?php echo esc_attr( $settings['recipient_email_1'] ?? '' ); ?>"
 										class="regular-text"
 										required
 									/>
@@ -162,7 +162,7 @@ class SCF_Admin {
 										type="email" 
 										name="recipient_email_2" 
 										id="recipient_email_2"
-										value="<?php echo esc_attr( $settings['recipient_email_2'] ); ?>"
+										value="<?php echo esc_attr( $settings['recipient_email_2'] ?? '' ); ?>"
 										class="regular-text"
 									/>
 									<p class="description"><?php esc_html_e( 'Additional recipient (optional)', 'secure-contact-form' ); ?></p>
@@ -177,7 +177,7 @@ class SCF_Admin {
 										type="email" 
 										name="recipient_email_3" 
 										id="recipient_email_3"
-										value="<?php echo esc_attr( $settings['recipient_email_3'] ); ?>"
+										value="<?php echo esc_attr( $settings['recipient_email_3'] ?? '' ); ?>"
 										class="regular-text"
 									/>
 									<p class="description"><?php esc_html_e( 'Additional recipient (optional)', 'secure-contact-form' ); ?></p>
@@ -189,8 +189,8 @@ class SCF_Admin {
 								</th>
 								<td>
 									<select name="email_method" id="email_method">
-										<option value="wp_mail" <?php selected( 'wp_mail', $settings['email_method'] ); ?>><?php esc_html_e( 'WordPress wp_mail()', 'secure-contact-form' ); ?></option>
-										<option value="php_mail" <?php selected( 'php_mail', $settings['email_method'] ); ?>><?php esc_html_e( 'PHP mail()', 'secure-contact-form' ); ?></option>
+										<option value="wp_mail" <?php selected( 'wp_mail', $settings['email_method'] ?? 'wp_mail' ); ?>><?php esc_html_e( 'WordPress wp_mail()', 'secure-contact-form' ); ?></option>
+										<option value="php_mail" <?php selected( 'php_mail', $settings['email_method'] ?? 'wp_mail' ); ?>><?php esc_html_e( 'PHP mail()', 'secure-contact-form' ); ?></option>
 									</select>
 									<p class="description"><?php esc_html_e( 'Choose email sending method', 'secure-contact-form' ); ?></p>
 								</td>
@@ -211,7 +211,7 @@ class SCF_Admin {
 										type="text" 
 										name="subject_label" 
 										id="subject_label"
-										value="<?php echo esc_attr( $settings['subject_label'] ); ?>"
+										value="<?php echo esc_attr( $settings['subject_label'] ?? 'Subject' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -225,7 +225,7 @@ class SCF_Admin {
 										type="text" 
 										name="subject_placeholder" 
 										id="subject_placeholder"
-										value="<?php echo esc_attr( $settings['subject_placeholder'] ); ?>"
+										value="<?php echo esc_attr( $settings['subject_placeholder'] ?? 'Enter subject' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -239,7 +239,7 @@ class SCF_Admin {
 										type="text" 
 										name="message_label" 
 										id="message_label"
-										value="<?php echo esc_attr( $settings['message_label'] ); ?>"
+										value="<?php echo esc_attr( $settings['message_label'] ?? 'Message' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -253,7 +253,7 @@ class SCF_Admin {
 										type="text" 
 										name="message_placeholder" 
 										id="message_placeholder"
-										value="<?php echo esc_attr( $settings['message_placeholder'] ); ?>"
+										value="<?php echo esc_attr( $settings['message_placeholder'] ?? 'Enter your message' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -267,7 +267,7 @@ class SCF_Admin {
 										type="text" 
 										name="privacy_label" 
 										id="privacy_label"
-										value="<?php echo esc_attr( $settings['privacy_label'] ); ?>"
+										value="<?php echo esc_attr( $settings['privacy_label'] ?? 'I agree to the Privacy Policy' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -281,7 +281,7 @@ class SCF_Admin {
 										type="url" 
 										name="privacy_link" 
 										id="privacy_link"
-										value="<?php echo esc_attr( $settings['privacy_link'] ); ?>"
+										value="<?php echo esc_attr( $settings['privacy_link'] ?? '' ); ?>"
 										class="regular-text"
 									/>
 									<p class="description"><?php esc_html_e( 'URL to your privacy policy page', 'secure-contact-form' ); ?></p>
@@ -295,7 +295,7 @@ class SCF_Admin {
 								<th scope="row"><?php esc_html_e( 'Enable Name Field', 'secure-contact-form' ); ?></th>
 								<td>
 									<label>
-										<input type="checkbox" name="enable_name" value="1" <?php checked( '1', $settings['enable_name'] ); ?> />
+										<input type="checkbox" name="enable_name" value="1" <?php checked( '1', $settings['enable_name'] ?? '1' ); ?> />
 										<?php esc_html_e( 'Enable', 'secure-contact-form' ); ?>
 									</label>
 								</td>
@@ -309,7 +309,7 @@ class SCF_Admin {
 										type="text" 
 										name="name_label" 
 										id="name_label"
-										value="<?php echo esc_attr( $settings['name_label'] ); ?>"
+										value="<?php echo esc_attr( $settings['name_label'] ?? 'Name' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -323,7 +323,7 @@ class SCF_Admin {
 										type="text" 
 										name="name_placeholder" 
 										id="name_placeholder"
-										value="<?php echo esc_attr( $settings['name_placeholder'] ); ?>"
+										value="<?php echo esc_attr( $settings['name_placeholder'] ?? 'Your name' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -333,7 +333,7 @@ class SCF_Admin {
 								<th scope="row"><?php esc_html_e( 'Enable Email Field', 'secure-contact-form' ); ?></th>
 								<td>
 									<label>
-										<input type="checkbox" name="enable_email" value="1" <?php checked( '1', $settings['enable_email'] ); ?> />
+										<input type="checkbox" name="enable_email" value="1" <?php checked( '1', $settings['enable_email'] ?? '1' ); ?> />
 										<?php esc_html_e( 'Enable', 'secure-contact-form' ); ?>
 									</label>
 								</td>
@@ -347,7 +347,7 @@ class SCF_Admin {
 										type="text" 
 										name="email_label" 
 										id="email_label"
-										value="<?php echo esc_attr( $settings['email_label'] ); ?>"
+										value="<?php echo esc_attr( $settings['email_label'] ?? 'Email' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -361,7 +361,7 @@ class SCF_Admin {
 										type="text" 
 										name="email_placeholder" 
 										id="email_placeholder"
-										value="<?php echo esc_attr( $settings['email_placeholder'] ); ?>"
+										value="<?php echo esc_attr( $settings['email_placeholder'] ?? 'your@email.com' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -371,7 +371,7 @@ class SCF_Admin {
 								<th scope="row"><?php esc_html_e( 'Enable Phone Field', 'secure-contact-form' ); ?></th>
 								<td>
 									<label>
-										<input type="checkbox" name="enable_phone" value="1" <?php checked( '1', $settings['enable_phone'] ); ?> />
+										<input type="checkbox" name="enable_phone" value="1" <?php checked( '1', $settings['enable_phone'] ?? '0' ); ?> />
 										<?php esc_html_e( 'Enable', 'secure-contact-form' ); ?>
 									</label>
 								</td>
@@ -385,7 +385,7 @@ class SCF_Admin {
 										type="text" 
 										name="phone_label" 
 										id="phone_label"
-										value="<?php echo esc_attr( $settings['phone_label'] ); ?>"
+										value="<?php echo esc_attr( $settings['phone_label'] ?? 'Phone' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -399,7 +399,7 @@ class SCF_Admin {
 										type="text" 
 										name="phone_placeholder" 
 										id="phone_placeholder"
-										value="<?php echo esc_attr( $settings['phone_placeholder'] ); ?>"
+										value="<?php echo esc_attr( $settings['phone_placeholder'] ?? 'Your phone number' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -409,7 +409,7 @@ class SCF_Admin {
 								<th scope="row"><?php esc_html_e( 'Enable Dropdown Field', 'secure-contact-form' ); ?></th>
 								<td>
 									<label>
-										<input type="checkbox" name="enable_dropdown" value="1" <?php checked( '1', $settings['enable_dropdown'] ); ?> />
+										<input type="checkbox" name="enable_dropdown" value="1" <?php checked( '1', $settings['enable_dropdown'] ?? '0' ); ?> />
 										<?php esc_html_e( 'Enable', 'secure-contact-form' ); ?>
 									</label>
 								</td>
@@ -423,7 +423,7 @@ class SCF_Admin {
 										type="text" 
 										name="dropdown_label" 
 										id="dropdown_label"
-										value="<?php echo esc_attr( $settings['dropdown_label'] ); ?>"
+										value="<?php echo esc_attr( $settings['dropdown_label'] ?? 'Select an option' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -438,7 +438,7 @@ class SCF_Admin {
 										type="text" 
 										name="dropdown_option_<?php echo esc_attr( $i ); ?>" 
 										id="dropdown_option_<?php echo esc_attr( $i ); ?>"
-										value="<?php echo esc_attr( $settings[ 'dropdown_option_' . $i ] ); ?>"
+										value="<?php echo esc_attr( $settings[ 'dropdown_option_' . $i ] ?? '' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -472,7 +472,7 @@ class SCF_Admin {
 										type="number" 
 										name="min_submit_time" 
 										id="min_submit_time"
-										value="<?php echo esc_attr( $settings['min_submit_time'] ); ?>"
+										value="<?php echo esc_attr( $settings['min_submit_time'] ?? '3' ); ?>"
 										min="1"
 										max="60"
 										class="small-text"
@@ -484,7 +484,7 @@ class SCF_Admin {
 								<th scope="row"><?php esc_html_e( 'Enable Security Question', 'secure-contact-form' ); ?></th>
 								<td>
 									<label>
-										<input type="checkbox" name="enable_security_question" value="1" <?php checked( '1', $settings['enable_security_question'] ); ?> />
+										<input type="checkbox" name="enable_security_question" value="1" <?php checked( '1', $settings['enable_security_question'] ?? '0' ); ?> />
 										<?php esc_html_e( 'Enable', 'secure-contact-form' ); ?>
 									</label>
 								</td>
@@ -498,7 +498,7 @@ class SCF_Admin {
 										type="text" 
 										name="security_question" 
 										id="security_question"
-										value="<?php echo esc_attr( $settings['security_question'] ); ?>"
+										value="<?php echo esc_attr( $settings['security_question'] ?? 'What is 2 + 2?' ); ?>"
 										class="regular-text"
 									/>
 								</td>
@@ -512,7 +512,7 @@ class SCF_Admin {
 										type="text" 
 										name="security_answer" 
 										id="security_answer"
-										value="<?php echo esc_attr( $settings['security_answer'] ); ?>"
+										value="<?php echo esc_attr( $settings['security_answer'] ?? '4' ); ?>"
 										class="regular-text"
 									/>
 									<p class="description"><?php esc_html_e( 'Case-insensitive matching', 'secure-contact-form' ); ?></p>
@@ -531,7 +531,7 @@ class SCF_Admin {
 										type="number" 
 										name="rate_limit_max" 
 										id="rate_limit_max"
-										value="<?php echo esc_attr( $settings['rate_limit_max'] ); ?>"
+										value="<?php echo esc_attr( $settings['rate_limit_max'] ?? '5' ); ?>"
 										min="1"
 										max="100"
 										class="small-text"
@@ -548,7 +548,7 @@ class SCF_Admin {
 										type="number" 
 										name="rate_limit_window" 
 										id="rate_limit_window"
-										value="<?php echo esc_attr( $settings['rate_limit_window'] ); ?>"
+										value="<?php echo esc_attr( $settings['rate_limit_window'] ?? '60' ); ?>"
 										min="1"
 										max="1440"
 										class="small-text"
@@ -571,7 +571,7 @@ class SCF_Admin {
 										type="text" 
 										name="form_bg_color" 
 										id="form_bg_color"
-										value="<?php echo esc_attr( $settings['form_bg_color'] ); ?>"
+										value="<?php echo esc_attr( $settings['form_bg_color'] ?? '#ffffff' ); ?>"
 										class="scf-color-picker"
 									/>
 								</td>
@@ -585,7 +585,7 @@ class SCF_Admin {
 										type="text" 
 										name="form_border_color" 
 										id="form_border_color"
-										value="<?php echo esc_attr( $settings['form_border_color'] ); ?>"
+										value="<?php echo esc_attr( $settings['form_border_color'] ?? '#dddddd' ); ?>"
 										class="scf-color-picker"
 									/>
 								</td>
@@ -599,7 +599,7 @@ class SCF_Admin {
 										type="text" 
 										name="form_text_color" 
 										id="form_text_color"
-										value="<?php echo esc_attr( $settings['form_text_color'] ); ?>"
+										value="<?php echo esc_attr( $settings['form_text_color'] ?? '#333333' ); ?>"
 										class="scf-color-picker"
 									/>
 								</td>
@@ -613,7 +613,7 @@ class SCF_Admin {
 										type="text" 
 										name="button_bg_color" 
 										id="button_bg_color"
-										value="<?php echo esc_attr( $settings['button_bg_color'] ); ?>"
+										value="<?php echo esc_attr( $settings['button_bg_color'] ?? '#0073aa' ); ?>"
 										class="scf-color-picker"
 									/>
 								</td>
@@ -627,7 +627,7 @@ class SCF_Admin {
 										type="text" 
 										name="button_text_color" 
 										id="button_text_color"
-										value="<?php echo esc_attr( $settings['button_text_color'] ); ?>"
+										value="<?php echo esc_attr( $settings['button_text_color'] ?? '#ffffff' ); ?>"
 										class="scf-color-picker"
 									/>
 								</td>
@@ -641,7 +641,7 @@ class SCF_Admin {
 										type="number" 
 										name="border_radius" 
 										id="border_radius"
-										value="<?php echo esc_attr( $settings['border_radius'] ); ?>"
+										value="<?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>"
 										min="0"
 										max="50"
 										class="small-text"
@@ -660,7 +660,7 @@ class SCF_Admin {
 								<th scope="row"><?php esc_html_e( 'Cleanup on Uninstall', 'secure-contact-form' ); ?></th>
 								<td>
 									<label>
-										<input type="checkbox" name="cleanup_on_uninstall" value="1" <?php checked( '1', $settings['cleanup_on_uninstall'] ); ?> />
+										<input type="checkbox" name="cleanup_on_uninstall" value="1" <?php checked( '1', $settings['cleanup_on_uninstall'] ?? '0' ); ?> />
 										<?php esc_html_e( 'Remove all plugin data when uninstalled', 'secure-contact-form' ); ?>
 									</label>
 									<p class="description"><?php esc_html_e( 'This includes all settings, IP consents, and rate limit records', 'secure-contact-form' ); ?></p>
