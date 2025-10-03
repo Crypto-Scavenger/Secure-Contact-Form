@@ -166,58 +166,6 @@ secure-contact-form/
     └── index.php              # Security stub
 ```
 
-## Database Structure
-
-The plugin creates 3 custom tables to avoid bloating `wp_options`:
-
-### Settings Table (`wp_scf_settings`)
-
-```sql
-CREATE TABLE wp_scf_settings (
-    id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-    setting_key varchar(191) NOT NULL,
-    setting_value longtext,
-    PRIMARY KEY (id),
-    UNIQUE KEY setting_key (setting_key)
-)
-```
-
-Stores all plugin configuration including colors, labels, anti-spam settings, etc.
-
-### IP Consents Table (`wp_scf_ip_consents`)
-
-```sql
-CREATE TABLE wp_scf_ip_consents (
-    id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-    ip_address varchar(45) NOT NULL,
-    consented_at datetime NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY ip_address (ip_address),
-    KEY consented_at (consented_at)
-)
-```
-
-Tracks which IP addresses have consented to the Privacy Policy.
-
-### Rate Limit Table (`wp_scf_rate_limit`)
-
-```sql
-CREATE TABLE wp_scf_rate_limit (
-    id bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-    ip_address varchar(45) NOT NULL,
-    session_id varchar(64) NOT NULL,
-    submission_count int(11) NOT NULL DEFAULT 0,
-    last_submission datetime NOT NULL,
-    PRIMARY KEY (id),
-    UNIQUE KEY ip_session (ip_address, session_id),
-    KEY last_submission (last_submission)
-)
-```
-
-Tracks submission frequency to prevent flooding.
-
-## Technical Details
-
 ### WordPress APIs Used
 
 - **Plugin API**: Action and filter hooks for WordPress integration
