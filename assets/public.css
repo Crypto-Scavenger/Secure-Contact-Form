@@ -1,0 +1,66 @@
+/**
+ * Public styles for Secure Contact Form
+ *
+ * @package SecureContactForm
+ * @since 1.0.0
+ */
+
+.scf-wrapper {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.scf-field label {
+	cursor: pointer;
+}
+
+.scf-field input,
+.scf-field textarea,
+.scf-field select {
+	font-family: inherit;
+	font-size: 16px;
+}
+
+.scf-field input:focus,
+.scf-field textarea:focus,
+.scf-field select:focus {
+	outline: 2px solid #0073aa;
+	outline-offset: 0;
+}
+
+.scf-form button[type="submit"] {
+	font-family: inherit;
+	transition: opacity 0.2s ease;
+}
+
+.scf-form button[type="submit"]:hover {
+	opacity: 0.9;
+}
+
+.scf-form button[type="submit"]:active {
+	transform: scale(0.98);
+}
+
+.scf-consent-required h3 {
+	color: #856404;
+}
+
+.scf-consent-required p {
+	color: #856404;
+	margin-bottom: 15px;
+}
+
+.scf-consent-required a {
+	color: #0073aa;
+	text-decoration: underline;
+}
+
+.scf-consent-required a:hover {
+	color: #005177;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+	.scf-wrapper {
+		padding: 20px !important;
+	}
+}
