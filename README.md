@@ -1,340 +1,186 @@
-# Secure Contact Form
+# Secure Contact Form - Installation Notes
 
-A WordPress plugin providing a secure, customizable contact form with advanced anti-spam protection and GDPR compliance.
-
-## Description
-
-Secure Contact Form is a comprehensive contact form solution designed with security, privacy, and user experience in mind. The plugin implements multiple layers of anti-spam protection while maintaining GDPR compliance through IP-based consent tracking.
-
-## Features
-
-### Core Functionality
-
-- **Simple Shortcode**: Add contact forms anywhere with `[secure_contact_form]`
-- **GDPR Compliance**: IP-based consent tracking with privacy policy integration
-- **Rate Limiting**: Prevent submission flooding with configurable limits
-- **Multiple Recipients**: Send notifications to up to 3 email addresses
-- **Flexible Email Methods**: Choose between WordPress `wp_mail()` or PHP `mail()`
-
-### Form Fields
-
-**Required Fields:**
-- Subject line
-- Message text area
-- Privacy Policy consent checkbox (with customizable link)
-
-**Optional Fields (Enable/Disable):**
-- Name field
-- Email field
-- Phone number field
-- Dropdown selection (up to 5 custom options)
-
-### Advanced Anti-Spam Protection
-
-The plugin implements 6 layers of sophisticated anti-spam protection:
-
-1. **Traditional Hidden Honeypot**
-   - Hidden field with CSS positioning (`position: absolute; opacity: 0; z-index: -5`)
-   - Uses common field name "name" to attract spam bots
-   - Invisible to legitimate users
-
-2. **Dynamic URL Honeypot**
-   - Hidden URL field with randomized name (e.g., `user_websirsite_URL_1234`)
-   - Field name changes on each page load
-   - Uses `display: none` to hide from users
-
-3. **Field Name Confusion**
-   - The visible "Subject" field uses `name="honeypot"` instead of `name="subject"`
-   - Creates confusion for bots expecting standard field names
-   - Legitimate users see and fill the visible field normally
-
-4. **Time-Based Submission Validation**
-   - Tracks form load time vs submission time on server-side
-   - Rejects submissions faster than configurable minimum (default: 3 seconds)
-   - Server-side timestamp validation prevents client-side manipulation
-
-5. **Security Question Challenge**
-   - Optional custom question/answer pair
-   - Case-insensitive answer matching
-   - Admin can set any question and expected answer
-
-6. **CSRF Protection**
-   - WordPress nonce verification on all form submissions
-   - Prevents cross-site request forgery attacks
-   - Session-based validation
-
-### Visual Customization
-
-Complete control over form appearance:
-
-- **Colors:**
-  - Form background color
-  - Border color
-  - Text color
-  - Button background color
-  - Button text color
-
-- **Layout:**
-  - Border radius for all elements (form, fields, buttons)
-  - Responsive design optimized for mobile devices
-  - Clean, modern interface
-
-- **Field Customization:**
-  - Custom labels for all fields
-  - Custom placeholder text
-  - Fully translatable
-
-## Installation
-
-1. Upload the `secure-contact-form` folder to `/wp-content/plugins/`
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Navigate to **Tools → Contact Form** to configure settings
-4. Add the shortcode `[secure_contact_form]` to any page or post
-
-## Usage
-
-### Basic Setup
-
-1. Go to **Tools → Contact Form** in WordPress admin
-2. Configure email recipients under the "Email Settings" tab
-3. Customize form fields under the "Form Fields" tab
-4. Adjust anti-spam settings under the "Anti-Spam" tab
-5. Design the form appearance under the "Visual Design" tab
-6. Add `[secure_contact_form]` shortcode to your page
-
-### GDPR Compliance
-
-The plugin implements GDPR compliance through IP consent tracking:
-
-- Users must accept the Privacy Policy before submitting the form
-- IP addresses are stored only after explicit consent
-- Consent is required only once per IP address
-- Consent data can be removed on plugin uninstall
-
-### Rate Limiting
-
-Protection against submission flooding:
-
-- Configure maximum submissions per time window
-- Default: 5 submissions per 60 minutes
-- Tracked by IP address and session ID
-- Old records automatically cleaned up
-
-### Anti-Spam Configuration
-
-1. **Minimum Submit Time**: Set the minimum seconds before form can be submitted (default: 3)
-2. **Security Question**: Enable and customize the security challenge
-3. **Rate Limiting**: Adjust max submissions and time window
-
-### Form Customization
-
-**Email Settings:**
-- Add up to 3 recipient email addresses
-- Choose email sending method
-
-**Required Fields:**
-- Customize labels and placeholders for Subject and Message
-- Set Privacy Policy label and link
-
-**Optional Fields:**
-- Enable/disable Name, Email, Phone, and Dropdown fields
-- Customize labels and placeholders for each
-- Add up to 5 dropdown options
-
-**Visual Design:**
-- Use color pickers for instant visual feedback
-- Adjust border radius for modern or traditional appearance
-- Colors update in real-time preview
-
-## File Structure
+## Complete File Structure
 
 ```
 secure-contact-form/
-├── secure-contact-form.php    # Main plugin file (initialization only)
-├── README.md                   # This documentation
-├── uninstall.php              # Cleanup on plugin deletion
-├── index.php                  # Security stub
-├── assets/                    # Plugin assets
-│   ├── admin.css              # Admin page styles
-│   ├── admin.js               # Admin page scripts (tabs, color picker)
-│   ├── public.css             # Form styles
-│   └── index.php              # Security stub
-└── includes/                  # Plugin classes
-    ├── class-database.php     # All database operations
-    ├── class-core.php         # Core functionality (shortcode, form rendering, validation)
-    ├── class-admin.php        # Admin interface
-    └── index.php              # Security stub
+├── secure-contact-form.php          # Main plugin file
+├── README.md                         # Complete documentation
+├── LICENSE                           # GPL v2 license (create manually)
+├── INSTALLATION-NOTES.md            # This file
+├── uninstall.php                    # Cleanup on plugin deletion
+├── index.php                        # Security stub (root)
+├── assets/
+│   ├── admin.css                    # Admin interface styles
+│   ├── admin.js                     # Admin interface scripts
+│   ├── public.css                   # Frontend form styles
+│   ├── public.js                    # Frontend form scripts
+│   └── index.php                    # Security stub (copy from root)
+└── includes/
+    ├── class-database.php           # Database operations
+    ├── class-admin.php              # Admin interface
+    ├── class-core.php               # Core functionality
+    └── index.php                    # Security stub (copy from root)
 ```
 
-### WordPress APIs Used
+## Important: Security Stub Files
 
-- **Plugin API**: Action and filter hooks for WordPress integration
-- **Database API**: All queries use `$wpdb->prepare()` with placeholders
-- **HTTP API**: Email sending via `wp_mail()` or PHP `mail()`
-- **Session API**: PHP sessions for form state and rate limiting
-- **Shortcode API**: Form rendering via `[secure_contact_form]`
+The `index.php` file containing:
+```php
+<?php
+// Silence is golden
+```
 
-### Security Implementation
+Must be copied to the following directories:
+1. **Root directory** (`/secure-contact-form/index.php`)
+2. **Assets directory** (`/secure-contact-form/assets/index.php`)
+3. **Includes directory** (`/secure-contact-form/includes/index.php`)
 
-**SQL Injection Prevention:**
-- All database queries use `$wpdb->prepare()` with `%i` for table names and `%s`/`%d`/`%f` for values
-- Compatible with WordPress 6.2+ identifier placeholder syntax
-- Zero direct SQL string concatenation
+This prevents directory listing and enhances security.
 
-**XSS Prevention:**
-- All output escaped with appropriate context functions:
-  - `esc_html()` for text content
-  - `esc_attr()` for HTML attributes
-  - `esc_url()` for URLs
-  - `sanitize_hex_color()` for color values
+## License File
 
-**CSRF Protection:**
-- WordPress nonces on all forms
-- Separate nonces for consent and submission
-- Session-based validation
+You need to create a separate `LICENSE` file containing the full GPL v2 license text.
 
-**Input Validation:**
-- All POST data sanitized with appropriate functions
-- Email validation with `sanitize_email()` and `is_email()`
-- URL validation with `esc_url_raw()`
-- Text sanitization with `sanitize_text_field()`
+You can obtain the GPL v2 license text from:
+https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
 
-**Capability Checks:**
-- `manage_options` required for all admin operations
-- Double verification in both render and save methods
+## Installation Steps
 
-### Performance Optimizations
+1. **Create the directory structure** as shown above
+2. **Copy all provided files** to their respective locations
+3. **Create the index.php security stubs** in all directories
+4. **Add the GPL v2 LICENSE file** to the root directory
+5. **Upload to WordPress**:
+   - Upload the entire `secure-contact-form` folder to `/wp-content/plugins/`
+   - Or zip the folder and upload via WordPress admin
+6. **Activate the plugin** through the Plugins menu
+7. **Configure settings** at Contact Form → Settings
 
-**Lazy Loading:**
-- Settings loaded only when needed (not in constructor)
-- Prevents unnecessary database queries on every page load
+## Initial Configuration
 
-**Conditional Asset Loading:**
-- Public CSS only loads on pages with the shortcode
-- Admin assets only load on plugin settings page
+After activation:
 
-**Database Optimization:**
-- Custom tables prevent wp_options bloat
-- Indexed columns for fast lookups
-- Automatic cleanup of old rate limit records
+1. **Go to Contact Form** in the WordPress admin menu
+2. **General Tab**:
+   - Set email recipients (default is admin email)
+   - Choose email method (wp_mail recommended)
+3. **Form Fields Tab**:
+   - Enable desired optional fields
+   - Customize labels and placeholders
+4. **Anti-Spam Tab**:
+   - Review default settings (recommended for most sites)
+   - Optionally enable security question
+5. **Styling Tab**:
+   - Customize colors if needed (defaults to dark theme)
+6. **Add shortcode** to a page: `[secure_contact_form]`
 
-**Caching:**
-- Settings cached in memory during request
-- No repeated database queries for same data
+## Testing Checklist
 
-## Requirements
+After installation, test the following:
 
-- **WordPress**: 6.2 or higher (uses `%i` placeholder for table names)
-- **PHP**: 7.4 or higher
-- **MySQL**: 5.6+ or MariaDB 10.0+
-- **Permissions**: `manage_options` capability for admin access
+### Consent Flow
+- [ ] Consent screen appears on first visit
+- [ ] Privacy policy link works correctly
+- [ ] Consent checkbox is required
+- [ ] Form appears after consent
+- [ ] Consent persists (no re-prompt on refresh)
 
-## Compatibility
+### Form Submission
+- [ ] All enabled fields display correctly
+- [ ] Required fields show asterisks
+- [ ] Form validates empty fields
+- [ ] Email validation works (if email field enabled)
+- [ ] Success message appears after submission
+- [ ] Email arrives at configured recipient(s)
 
-- Works with all properly coded WordPress themes
-- Compatible with major page builders
-- No conflicts with caching plugins
-- Multisite compatible
-- Follows WordPress coding standards
+### Anti-Spam Protection
+- [ ] Submitting too quickly shows error
+- [ ] Security question works (if enabled)
+- [ ] Rate limiting kicks in after max submissions
+- [ ] Honeypot fields are invisible to users
 
-## Frequently Asked Questions
+### Styling
+- [ ] Form displays correctly on desktop
+- [ ] Form displays correctly on mobile
+- [ ] Colors match configuration
+- [ ] Icons display (requires Font Awesome on site)
+- [ ] Animations work smoothly
 
-### How do I add the form to my site?
+### Admin Panel
+- [ ] All tabs load correctly
+- [ ] Settings save properly
+- [ ] Color pickers work
+- [ ] Field toggles show/hide related settings
 
-Use the shortcode `[secure_contact_form]` on any page or post. The plugin will automatically load the necessary styles.
+## Troubleshooting
 
-### Is the form GDPR compliant?
+### Emails Not Sending
+1. Test with both `wp_mail()` and PHP `mail()` methods
+2. Check your server's email configuration
+3. Install and configure an SMTP plugin
+4. Check spam folder
 
-Yes. The plugin requires users to accept the Privacy Policy before submitting. IP addresses are only stored after explicit consent.
+### Form Not Displaying
+1. Ensure shortcode is correct: `[secure_contact_form]`
+2. Check if CSS/JS files are loading (browser console)
+3. Clear browser cache
+4. Check for JavaScript conflicts with other plugins
 
-### What happens if someone doesn't accept the Privacy Policy?
+### Database Tables Not Created
+1. Deactivate and reactivate the plugin
+2. Check database user has CREATE TABLE permissions
+3. Review error logs for SQL errors
 
-They cannot use the form. A notice is displayed requiring them to accept before the form becomes available.
+### Rate Limiting Too Strict
+1. Go to Anti-Spam tab
+2. Increase "Maximum Submissions" value
+3. Increase "Time Window" value
 
-### Can I customize the form appearance?
+### Consent Screen Reappears
+1. Check if PHP sessions are working
+2. Verify IP address is being captured correctly
+3. Check database table `wp_scf_consent` has records
 
-Yes. Go to Tools → Contact Form → Visual Design tab to customize all colors and the border radius.
+## Database Information
 
-### How does the anti-spam protection work?
+### Tables Created
+- `{prefix}_scf_settings` - Plugin configuration
+- `{prefix}_scf_consent` - IP consent tracking
+- `{prefix}_scf_rate_limits` - Submission rate limiting
 
-The plugin uses 6 layers of protection including hidden honeypots, field name confusion, time-based validation, security questions, and CSRF protection. This multi-layered approach catches most spam without requiring CAPTCHAs.
+### Data Cleanup
+- Set "Cleanup on Uninstall" in Advanced tab
+- When enabled, all tables are deleted on plugin deletion
+- When disabled, data persists after uninstall
 
-### Can I receive emails at multiple addresses?
+## Security Notes
 
-Yes. You can configure up to 3 recipient email addresses in the Email Settings tab.
+### Honeypot Fields
+The plugin uses invisible honeypot fields that should never be filled by real users. These include:
+- Field with `name="name"` (traditional honeypot)
+- Field with `name="website_URL_####"` (dynamic honeypot)
+- The visible subject field uses `name="honeypot"` (field name confusion)
 
-### What if the form stops working after updates?
+### Server Requirements
+- PHP sessions must be enabled
+- Write permissions for session storage
+- MySQL/MariaDB with CREATE TABLE privileges
 
-Clear your browser cache and any WordPress caching plugins. The plugin follows WordPress standards and should work across updates.
+### Best Practices
+1. Keep WordPress core updated
+2. Use strong passwords for admin accounts
+3. Regular database backups
+4. Monitor submission logs
+5. Adjust rate limiting based on your traffic
 
-### Will this affect my site's performance?
+## Performance Notes
 
-No. The plugin uses lazy loading and conditional asset enqueuing to minimize performance impact. Styles only load on pages with the shortcode.
+### Asset Loading
+- Frontend CSS/JS only loads on pages with the shortcode
+- Admin CSS/JS only loads on plugin settings page
+- No assets load on other pages
 
-### Can I translate the form?
-
-Yes. All text is translatable using the `secure-contact-form` text domain. The plugin is ready for translation.
-
-### What data is stored?
-
-The plugin stores:
-- Form settings in a custom database table
-- IP addresses that have consented to Privacy Policy
-- Rate limiting data (IP, session, submission count)
-
-All data can be removed by enabling "Cleanup on Uninstall" in the settings.
-
-## Privacy & GDPR
-
-### Data Collection
-
-The plugin collects and stores:
-
-1. **IP Addresses**: Only after users explicitly consent to the Privacy Policy
-2. **Form Submissions**: Sent via email, not stored in database
-3. **Rate Limiting Data**: Temporary records for flood protection
-
-### Data Retention
-
-- IP consent records: Stored indefinitely until plugin uninstall (if cleanup enabled)
-- Rate limit records: Automatically cleaned after 24 hours
-- Form submissions: Not stored; only sent via email
-
-### User Rights
-
-Users can request:
-- Consent withdrawal (admin must manually remove from database)
-- Data export (admin must manually export IP records)
-- Data deletion (enable cleanup on uninstall, or manually delete)
-
-### GDPR Compliance Features
-
-- Explicit consent required before form use
-- Clear privacy policy link
-- No third-party services or tracking
-- All data stored locally in WordPress database
-- Option to remove all data on uninstall
-
-## Changelog
-
-### Version 1.0.0
-- Initial release
-- Contact form with shortcode support
-- IP-based GDPR consent tracking
-- 6-layer anti-spam protection system
-- Rate limiting for submission flooding
-- Customizable form fields (required and optional)
-- Multiple email recipients
-- Complete visual customization
-- Custom database tables for optimal performance
-- Comprehensive security implementation
-- Mobile-responsive design
-- Full WordPress coding standards compliance
-
-## Support
-
-For issues or questions:
-1. Check the FAQ section above
-2. Review the plugin settings and ensure proper configuration
-3. Test on a staging site before reporting issues
-4. Provide detailed information about your environment (WordPress version, PHP version, active plugins, theme)
+### Database Queries
+- Settings are cached after first load
+- Rate limit cleanup
