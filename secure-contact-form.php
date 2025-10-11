@@ -3,11 +3,10 @@
  * Plugin Name: Secure Contact Form
  * Description: Secure, customizable contact form with advanced anti-spam protection and GDPR compliance
  * Version: 1.0.0
- * Requires at least: 6.2
- * Requires PHP: 7.4
  * Text Domain: secure-contact-form
- * Domain Path: /languages
  * License: GPL v2 or later
+ * Requires at least: 6.8
+ * Requires PHP: 7.4
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -29,10 +28,10 @@ require_once SCF_DIR . 'includes/class-admin.php';
  */
 function scf_init() {
 	$database = new SCF_Database();
-	$core = new SCF_Core( $database );
+	$core     = new SCF_Core( $database );
 	
 	if ( is_admin() ) {
-		new SCF_Admin( $database );
+		$admin = new SCF_Admin( $database );
 	}
 }
 add_action( 'plugins_loaded', 'scf_init' );
