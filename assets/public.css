@@ -1,66 +1,476 @@
 /**
- * Public styles for Secure Contact Form
- *
- * @package SecureContactForm
- * @since 1.0.0
+ * Secure Contact Form - Public Styles
+ * Futuristic Cyberpunk / Dark Web / Surveillance Aesthetic
  */
 
-.scf-wrapper {
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+/* Consent Wrapper */
+.scf-consent-wrapper {
+	max-width: 600px;
+	margin: 30px auto;
+	padding: 30px;
+	position: relative;
+	overflow: hidden;
+	box-shadow: 0 0 30px rgba(209, 28, 28, 0.3),
+	            inset 0 0 20px rgba(209, 28, 28, 0.05);
+	animation: scfPulseGlow 3s ease-in-out infinite;
 }
 
-.scf-field label {
-	cursor: pointer;
+.scf-consent-wrapper::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 2px;
+	background: linear-gradient(90deg, transparent, #d11c1c, transparent);
+	animation: scfScanLine 3s linear infinite;
 }
 
-.scf-field input,
-.scf-field textarea,
-.scf-field select {
-	font-family: inherit;
+.scf-consent-header {
+	text-align: center;
+	margin-bottom: 25px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid rgba(209, 28, 28, 0.3);
+}
+
+.scf-consent-header i {
+	font-size: 48px;
+	color: #d11c1c;
+	margin-bottom: 15px;
+	display: block;
+	animation: scfIconPulse 2s ease-in-out infinite;
+	text-shadow: 0 0 20px rgba(209, 28, 28, 0.8);
+}
+
+.scf-consent-header h3 {
+	margin: 0;
+	font-size: 24px;
+	font-weight: 600;
+	letter-spacing: 2px;
+	text-transform: uppercase;
+	color: #ffffff;
+	text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+}
+
+.scf-consent-content p {
 	font-size: 16px;
-}
-
-.scf-field input:focus,
-.scf-field textarea:focus,
-.scf-field select:focus {
-	outline: 2px solid #0073aa;
-	outline-offset: 0;
-}
-
-.scf-form button[type="submit"] {
-	font-family: inherit;
-	transition: opacity 0.2s ease;
-}
-
-.scf-form button[type="submit"]:hover {
+	line-height: 1.6;
+	margin-bottom: 25px;
 	opacity: 0.9;
 }
 
-.scf-form button[type="submit"]:active {
-	transform: scale(0.98);
+.scf-consent-checkbox {
+	display: flex;
+	align-items: flex-start;
+	gap: 12px;
+	margin-bottom: 25px;
+	cursor: pointer;
+	padding: 15px;
+	background: rgba(255, 255, 255, 0.02);
+	border: 1px solid rgba(209, 28, 28, 0.2);
+	transition: all 0.3s ease;
 }
 
-.scf-consent-required h3 {
-	color: #856404;
+.scf-consent-checkbox:hover {
+	background: rgba(209, 28, 28, 0.05);
+	border-color: rgba(209, 28, 28, 0.4);
 }
 
-.scf-consent-required p {
-	color: #856404;
-	margin-bottom: 15px;
+.scf-consent-checkbox input[type="checkbox"] {
+	width: 20px;
+	height: 20px;
+	margin: 0;
+	cursor: pointer;
+	accent-color: #d11c1c;
 }
 
-.scf-consent-required a {
-	color: #0073aa;
-	text-decoration: underline;
+.scf-consent-checkbox span {
+	flex: 1;
+	font-size: 14px;
+	line-height: 1.5;
 }
 
-.scf-consent-required a:hover {
-	color: #005177;
+.scf-consent-checkbox a {
+	color: #d11c1c;
+	text-decoration: none;
+	border-bottom: 1px dotted #d11c1c;
+	transition: all 0.3s ease;
 }
 
-/* Responsive */
-@media (max-width: 600px) {
-	.scf-wrapper {
-		padding: 20px !important;
+.scf-consent-checkbox a:hover {
+	color: #ff2929;
+	border-bottom-style: solid;
+	text-shadow: 0 0 5px rgba(209, 28, 28, 0.5);
+}
+
+.scf-consent-button {
+	width: 100%;
+	padding: 15px 30px;
+	font-size: 16px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 1px;
+	border: none;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	position: relative;
+	overflow: hidden;
+	box-shadow: 0 4px 15px rgba(209, 28, 28, 0.4);
+}
+
+.scf-consent-button::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 0;
+	height: 0;
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	transition: width 0.6s ease, height 0.6s ease;
+}
+
+.scf-consent-button:hover::before {
+	width: 300px;
+	height: 300px;
+}
+
+.scf-consent-button:hover {
+	box-shadow: 0 6px 25px rgba(209, 28, 28, 0.6);
+	transform: translateY(-2px);
+}
+
+.scf-consent-button i {
+	margin-right: 10px;
+}
+
+/* Form Wrapper */
+.scf-form-wrapper {
+	max-width: 700px;
+	margin: 30px auto;
+	padding: 35px;
+	position: relative;
+	overflow: hidden;
+	box-shadow: 0 0 30px rgba(209, 28, 28, 0.3),
+	            inset 0 0 20px rgba(209, 28, 28, 0.05);
+	animation: scfPulseGlow 3s ease-in-out infinite;
+}
+
+.scf-form-wrapper::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 2px;
+	background: linear-gradient(90deg, transparent, #d11c1c, transparent);
+	animation: scfScanLine 3s linear infinite;
+}
+
+.scf-form-wrapper::after {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 100px;
+	height: 100px;
+	background: radial-gradient(circle, rgba(209, 28, 28, 0.1) 0%, transparent 70%);
+	pointer-events: none;
+	animation: scfRadarSweep 4s linear infinite;
+}
+
+/* Messages */
+.scf-errors,
+.scf-success {
+	padding: 20px;
+	margin-bottom: 25px;
+	border-left: 4px solid;
+	position: relative;
+	animation: scfSlideIn 0.4s ease-out;
+}
+
+.scf-errors {
+	background: rgba(209, 28, 28, 0.1);
+	border-color: #d11c1c;
+	box-shadow: 0 0 15px rgba(209, 28, 28, 0.2);
+}
+
+.scf-success {
+	background: rgba(40, 200, 80, 0.1);
+	border-color: #28c850;
+	box-shadow: 0 0 15px rgba(40, 200, 80, 0.2);
+}
+
+.scf-errors i,
+.scf-success i {
+	font-size: 20px;
+	margin-right: 12px;
+	vertical-align: middle;
+	animation: scfIconPulse 2s ease-in-out infinite;
+}
+
+.scf-errors i {
+	color: #d11c1c;
+	text-shadow: 0 0 10px rgba(209, 28, 28, 0.5);
+}
+
+.scf-success i {
+	color: #28c850;
+	text-shadow: 0 0 10px rgba(40, 200, 80, 0.5);
+}
+
+.scf-errors ul {
+	margin: 10px 0 0 32px;
+	padding: 0;
+	list-style: none;
+}
+
+.scf-errors li {
+	margin-bottom: 5px;
+	position: relative;
+	padding-left: 20px;
+}
+
+.scf-errors li::before {
+	content: '▸';
+	position: absolute;
+	left: 0;
+	color: #d11c1c;
+}
+
+.scf-success p {
+	margin: 0;
+	font-size: 16px;
+}
+
+/* Honeypots - Hidden */
+.scf-honeypot,
+.scf-url-honeypot {
+	position: absolute !important;
+	opacity: 0 !important;
+	pointer-events: none !important;
+	z-index: -5 !important;
+	width: 0 !important;
+	height: 0 !important;
+}
+
+.scf-url-honeypot {
+	display: none !important;
+}
+
+/* Form Fields */
+.scf-field {
+	margin-bottom: 25px;
+	position: relative;
+}
+
+.scf-field label {
+	display: block;
+	margin-bottom: 8px;
+	font-weight: 500;
+	font-size: 14px;
+	letter-spacing: 0.5px;
+	text-transform: uppercase;
+	color: #ffffff;
+	text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+}
+
+.scf-field input[type="text"],
+.scf-field input[type="email"],
+.scf-field input[type="tel"],
+.scf-field select,
+.scf-field textarea {
+	width: 100%;
+	padding: 12px 15px;
+	font-size: 15px;
+	background: rgba(0, 0, 0, 0.3);
+	border: 1px solid rgba(209, 28, 28, 0.3);
+	color: #ffffff;
+	transition: all 0.3s ease;
+	font-family: 'Courier New', monospace;
+	box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+}
+
+.scf-field input:focus,
+.scf-field select:focus,
+.scf-field textarea:focus {
+	outline: none;
+	border-color: #d11c1c;
+	background: rgba(0, 0, 0, 0.5);
+	box-shadow: 0 0 15px rgba(209, 28, 28, 0.3),
+	            inset 0 0 10px rgba(0, 0, 0, 0.5);
+}
+
+.scf-field textarea {
+	resize: vertical;
+	min-height: 120px;
+}
+
+.scf-field select {
+	cursor: pointer;
+	appearance: none;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23d11c1c' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+	background-repeat: no-repeat;
+	background-position: right 15px center;
+	padding-right: 40px;
+}
+
+.scf-required {
+	color: #d11c1c;
+	margin-left: 4px;
+	font-size: 16px;
+	text-shadow: 0 0 5px rgba(209, 28, 28, 0.5);
+}
+
+/* Security Question */
+.scf-security-question {
+	background: rgba(209, 28, 28, 0.05);
+	padding: 20px;
+	border-left: 3px solid #d11c1c;
+	margin-top: 30px;
+}
+
+.scf-security-question label i {
+	margin-right: 8px;
+	color: #d11c1c;
+}
+
+/* Submit Button */
+.scf-submit-button {
+	width: 100%;
+	padding: 16px 30px;
+	font-size: 16px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 2px;
+	border: none;
+	cursor: pointer;
+	transition: all 0.3s ease;
+	position: relative;
+	overflow: hidden;
+	box-shadow: 0 4px 15px rgba(209, 28, 28, 0.4);
+	margin-top: 30px;
+}
+
+.scf-submit-button::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 0;
+	height: 0;
+	background: rgba(255, 255, 255, 0.2);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	transition: width 0.6s ease, height 0.6s ease;
+}
+
+.scf-submit-button:hover::before {
+	width: 400px;
+	height: 400px;
+}
+
+.scf-submit-button:hover {
+	box-shadow: 0 6px 25px rgba(209, 28, 28, 0.6);
+	transform: translateY(-2px);
+}
+
+.scf-submit-button:active {
+	transform: translateY(0);
+	box-shadow: 0 2px 10px rgba(209, 28, 28, 0.4);
+}
+
+.scf-submit-button i {
+	margin-right: 10px;
+}
+
+/* Animations */
+@keyframes scfPulseGlow {
+	0%, 100% {
+		box-shadow: 0 0 30px rgba(209, 28, 28, 0.3),
+		            inset 0 0 20px rgba(209, 28, 28, 0.05);
+	}
+	50% {
+		box-shadow: 0 0 40px rgba(209, 28, 28, 0.5),
+		            inset 0 0 30px rgba(209, 28, 28, 0.1);
+	}
+}
+
+@keyframes scfScanLine {
+	0% {
+		left: -100%;
+	}
+	100% {
+		left: 200%;
+	}
+}
+
+@keyframes scfIconPulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.6;
+	}
+}
+
+@keyframes scfRadarSweep {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes scfSlideIn {
+	from {
+		opacity: 0;
+		transform: translateY(-20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Responsive Design */
+@media screen and (max-width: 768px) {
+	.scf-consent-wrapper,
+	.scf-form-wrapper {
+		margin: 20px 15px;
+		padding: 25px;
+	}
+	
+	.scf-consent-header h3 {
+		font-size: 20px;
+	}
+	
+	.scf-field input,
+	.scf-field select,
+	.scf-field textarea {
+		font-size: 16px; /* Prevents iOS zoom */
+	}
+	
+	.scf-submit-button,
+	.scf-consent-button {
+		padding: 14px 25px;
+		font-size: 14px;
+	}
+}
+
+@media screen and (max-width: 480px) {
+	.scf-consent-header i {
+		font-size: 36px;
+	}
+	
+	.scf-consent-header h3 {
+		font-size: 18px;
+		letter-spacing: 1px;
+	}
+	
+	.scf-field label {
+		font-size: 13px;
 	}
 }
