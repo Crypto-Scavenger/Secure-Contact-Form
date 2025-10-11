@@ -581,45 +581,26 @@ class SCF_Admin {
 			wp_die( esc_html__( 'Security check failed', 'secure-contact-form' ) );
 		}
 		
-		$settings = array(
-			'email_recipients'         => isset( $_POST['email_recipients'] ) ? sanitize_text_field( wp_unslash( $_POST['email_recipients'] ) ) : '',
-			'email_method'             => isset( $_POST['email_method'] ) ? sanitize_text_field( wp_unslash( $_POST['email_method'] ) ) : 'wp_mail',
-			'enable_name'              => isset( $_POST['enable_name'] ) ? '1' : '0',
-			'enable_email'             => isset( $_POST['enable_email'] ) ? '1' : '0',
-			'enable_phone'             => isset( $_POST['enable_phone'] ) ? '1' : '0',
-			'enable_dropdown'          => isset( $_POST['enable_dropdown'] ) ? '1' : '0',
-			'label_name'               => isset( $_POST['label_name'] ) ? sanitize_text_field( wp_unslash( $_POST['label_name'] ) ) : '',
-			'label_email'              => isset( $_POST['label_email'] ) ? sanitize_text_field( wp_unslash( $_POST['label_email'] ) ) : '',
-			'label_phone'              => isset( $_POST['label_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['label_phone'] ) ) : '',
-			'label_subject'            => isset( $_POST['label_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['label_subject'] ) ) : '',
-			'label_message'            => isset( $_POST['label_message'] ) ? sanitize_text_field( wp_unslash( $_POST['label_message'] ) ) : '',
-			'label_dropdown'           => isset( $_POST['label_dropdown'] ) ? sanitize_text_field( wp_unslash( $_POST['label_dropdown'] ) ) : '',
-			'placeholder_name'         => isset( $_POST['placeholder_name'] ) ? sanitize_text_field( wp_unslash( $_POST['placeholder_name'] ) ) : '',
-			'placeholder_email'        => isset( $_POST['placeholder_email'] ) ? sanitize_text_field( wp_unslash( $_POST['placeholder_email'] ) ) : '',
-			'placeholder_phone'        => isset( $_POST['placeholder_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['placeholder_phone'] ) ) : '',
-			'placeholder_subject'      => isset( $_POST['placeholder_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['placeholder_subject'] ) ) : '',
-			'placeholder_message'      => isset( $_POST['placeholder_message'] ) ? sanitize_text_field( wp_unslash( $_POST['placeholder_message'] ) ) : '',
-			'dropdown_options'         => isset( $_POST['dropdown_options'] ) ? sanitize_textarea_field( wp_unslash( $_POST['dropdown_options'] ) ) : '',
-			'enable_security_question' => isset( $_POST['enable_security_question'] ) ? '1' : '0',
-			'security_question'        => isset( $_POST['security_question'] ) ? sanitize_text_field( wp_unslash( $_POST['security_question'] ) ) : '',
-			'security_answer'          => isset( $_POST['security_answer'] ) ? sanitize_text_field( wp_unslash( $_POST['security_answer'] ) ) : '',
-			'min_submission_time'      => isset( $_POST['min_submission_time'] ) ? absint( $_POST['min_submission_time'] ) : 3,
-			'rate_limit_max'           => isset( $_POST['rate_limit_max'] ) ? absint( $_POST['rate_limit_max'] ) : 5,
-			'rate_limit_window'        => isset( $_POST['rate_limit_window'] ) ? absint( $_POST['rate_limit_window'] ) : 60,
-			'form_bg_color'            => isset( $_POST['form_bg_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['form_bg_color'] ) ) : '#1a1a1a',
-			'form_border_color'        => isset( $_POST['form_border_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['form_border_color'] ) ) : '#d11c1c',
-			'form_text_color'          => isset( $_POST['form_text_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['form_text_color'] ) ) : '#ffffff',
-			'button_bg_color'          => isset( $_POST['button_bg_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['button_bg_color'] ) ) : '#d11c1c',
-			'button_text_color'        => isset( $_POST['button_text_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['button_text_color'] ) ) : '#ffffff',
-			'border_radius'            => isset( $_POST['border_radius'] ) ? absint( $_POST['border_radius'] ) : 4,
-			'cleanup_on_uninstall'     => isset( $_POST['cleanup_on_uninstall'] ) ? '1' : '0',
-		);
-		
-		foreach ( $settings as $key => $value ) {
-			$this->database->save_setting( $key, $value );
-		}
-		
 		$active_tab = isset( $_POST['active_tab'] ) ? sanitize_text_field( wp_unslash( $_POST['active_tab'] ) ) : 'general';
+		
+		// Only save settings for the active tab
+		switch ( $active_tab ) {
+			case 'general':
+				$this->save_general_settings();
+				break;
+			case 'fields':
+				$this->save_fields_settings();
+				break;
+			case 'antispam':
+				$this->save_antispam_settings();
+				break;
+			case 'style':
+				$this->save_style_settings();
+				break;
+			case 'advanced':
+				$this->save_advanced_settings();
+				break;
+		}
 		
 		wp_safe_redirect( add_query_arg(
 			array(
@@ -630,5 +611,96 @@ class SCF_Admin {
 			admin_url( 'admin.php' )
 		) );
 		exit;
+	}
+
+	/**
+	 * Save general settings
+	 */
+	private function save_general_settings() {
+		$settings = array(
+			'email_recipients' => isset( $_POST['email_recipients'] ) ? sanitize_text_field( wp_unslash( $_POST['email_recipients'] ) ) : '',
+			'email_method'     => isset( $_POST['email_method'] ) ? sanitize_text_field( wp_unslash( $_POST['email_method'] ) ) : 'wp_mail',
+		);
+		
+		foreach ( $settings as $key => $value ) {
+			$this->database->save_setting( $key, $value );
+		}
+	}
+
+	/**
+	 * Save fields settings
+	 */
+	private function save_fields_settings() {
+		$settings = array(
+			'enable_name'       => isset( $_POST['enable_name'] ) ? '1' : '0',
+			'enable_email'      => isset( $_POST['enable_email'] ) ? '1' : '0',
+			'enable_phone'      => isset( $_POST['enable_phone'] ) ? '1' : '0',
+			'enable_dropdown'   => isset( $_POST['enable_dropdown'] ) ? '1' : '0',
+			'label_name'        => isset( $_POST['label_name'] ) ? sanitize_text_field( wp_unslash( $_POST['label_name'] ) ) : '',
+			'label_email'       => isset( $_POST['label_email'] ) ? sanitize_text_field( wp_unslash( $_POST['label_email'] ) ) : '',
+			'label_phone'       => isset( $_POST['label_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['label_phone'] ) ) : '',
+			'label_subject'     => isset( $_POST['label_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['label_subject'] ) ) : '',
+			'label_message'     => isset( $_POST['label_message'] ) ? sanitize_text_field( wp_unslash( $_POST['label_message'] ) ) : '',
+			'label_dropdown'    => isset( $_POST['label_dropdown'] ) ? sanitize_text_field( wp_unslash( $_POST['label_dropdown'] ) ) : '',
+			'placeholder_name'  => isset( $_POST['placeholder_name'] ) ? sanitize_text_field( wp_unslash( $_POST['placeholder_name'] ) ) : '',
+			'placeholder_email' => isset( $_POST['placeholder_email'] ) ? sanitize_text_field( wp_unslash( $_POST['placeholder_email'] ) ) : '',
+			'placeholder_phone' => isset( $_POST['placeholder_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['placeholder_phone'] ) ) : '',
+			'placeholder_subject' => isset( $_POST['placeholder_subject'] ) ? sanitize_text_field( wp_unslash( $_POST['placeholder_subject'] ) ) : '',
+			'placeholder_message' => isset( $_POST['placeholder_message'] ) ? sanitize_text_field( wp_unslash( $_POST['placeholder_message'] ) ) : '',
+			'dropdown_options'  => isset( $_POST['dropdown_options'] ) ? sanitize_textarea_field( wp_unslash( $_POST['dropdown_options'] ) ) : '',
+		);
+		
+		foreach ( $settings as $key => $value ) {
+			$this->database->save_setting( $key, $value );
+		}
+	}
+
+	/**
+	 * Save anti-spam settings
+	 */
+	private function save_antispam_settings() {
+		$settings = array(
+			'enable_security_question' => isset( $_POST['enable_security_question'] ) ? '1' : '0',
+			'security_question'        => isset( $_POST['security_question'] ) ? sanitize_text_field( wp_unslash( $_POST['security_question'] ) ) : '',
+			'security_answer'          => isset( $_POST['security_answer'] ) ? sanitize_text_field( wp_unslash( $_POST['security_answer'] ) ) : '',
+			'min_submission_time'      => isset( $_POST['min_submission_time'] ) ? absint( $_POST['min_submission_time'] ) : 3,
+			'rate_limit_max'           => isset( $_POST['rate_limit_max'] ) ? absint( $_POST['rate_limit_max'] ) : 5,
+			'rate_limit_window'        => isset( $_POST['rate_limit_window'] ) ? absint( $_POST['rate_limit_window'] ) : 60,
+		);
+		
+		foreach ( $settings as $key => $value ) {
+			$this->database->save_setting( $key, $value );
+		}
+	}
+
+	/**
+	 * Save style settings
+	 */
+	private function save_style_settings() {
+		$settings = array(
+			'form_bg_color'     => isset( $_POST['form_bg_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['form_bg_color'] ) ) : '#1a1a1a',
+			'form_border_color' => isset( $_POST['form_border_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['form_border_color'] ) ) : '#d11c1c',
+			'form_text_color'   => isset( $_POST['form_text_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['form_text_color'] ) ) : '#ffffff',
+			'button_bg_color'   => isset( $_POST['button_bg_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['button_bg_color'] ) ) : '#d11c1c',
+			'button_text_color' => isset( $_POST['button_text_color'] ) ? sanitize_hex_color( wp_unslash( $_POST['button_text_color'] ) ) : '#ffffff',
+			'border_radius'     => isset( $_POST['border_radius'] ) ? absint( $_POST['border_radius'] ) : 4,
+		);
+		
+		foreach ( $settings as $key => $value ) {
+			$this->database->save_setting( $key, $value );
+		}
+	}
+
+	/**
+	 * Save advanced settings
+	 */
+	private function save_advanced_settings() {
+		$settings = array(
+			'cleanup_on_uninstall' => isset( $_POST['cleanup_on_uninstall'] ) ? '1' : '0',
+		);
+		
+		foreach ( $settings as $key => $value ) {
+			$this->database->save_setting( $key, $value );
+		}
 	}
 }
