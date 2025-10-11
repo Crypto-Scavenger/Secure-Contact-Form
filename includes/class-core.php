@@ -1,6 +1,6 @@
 <?php
 /**
- * Core functionality for Secure Contact Form
+ * Core functionality
  *
  * @package SecureContactForm
  * @since 1.0.0
@@ -10,9 +10,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-/**
- * Handles core plugin functionality
- */
 class SCF_Core {
 
 	/**
@@ -37,15 +34,26 @@ class SCF_Core {
 	public function __construct( $database ) {
 		$this->database = $database;
 		
-		add_shortcode( 'secure_contact_form', array( $this, 'render_form' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_public_assets' ) );
+		add_shortcode( 'secure_contact_form', array( $this, 'render_shortcode' ) );
 		add_action( 'init', array( $this, 'handle_form_submission' ) );
+		add_action( 'init', array( $this, 'handle_consent_submission' ) );
+		add_action( 'init', array( $this, 'start_session' ) );
+	}
+
+	/**
+	 * Start PHP session
+	 */
+	public function start_session() {
+		if ( ! session_id() && ! headers_sent() ) {
+			session_start();
+		}
 	}
 
 	/**
 	 * Get settings (lazy loading)
 	 *
-	 * @return array Settings
+	 * @return array
 	 */
 	private function get_settings() {
 		if ( null === $this->settings ) {
@@ -60,25 +68,39 @@ class SCF_Core {
 	public function enqueue_public_assets() {
 		global $post;
 		
-		if ( is_a( $post, 'WP_Post' ) && has_shortcode( $post->post_content, 'secure_contact_form' ) ) {
-			wp_enqueue_style(
-				'scf-public',
-				SCF_URL . 'assets/public.css',
-				array(),
-				SCF_VERSION
-			);
+		if ( ! is_a( $post, 'WP_Post' ) || ! has_shortcode( $post->post_content, 'secure_contact_form' ) ) {
+			return;
 		}
+		
+		wp_enqueue_style(
+			'scf-public',
+			SCF_URL . 'assets/public.css',
+			array(),
+			SCF_VERSION
+		);
+		
+		wp_enqueue_script(
+			'scf-public',
+			SCF_URL . 'assets/public.js',
+			array( 'jquery' ),
+			SCF_VERSION,
+			true
+		);
 	}
 
 	/**
 	 * Get user IP address
 	 *
-	 * @return string IP address
+	 * @return string
 	 */
 	private function get_user_ip() {
 		$ip = '';
 		
-		if ( isset( $_SERVER['REMOTE_ADDR'] ) ) {
+		if ( ! empty( $_SERVER['HTTP_CLIENT_IP'] ) ) {
+			$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_CLIENT_IP'] ) );
+		} elseif ( ! empty( $_SERVER['HTTP_X_FORWARDED_FOR'] ) ) {
+			$ip = sanitize_text_field( wp_unslash( $_SERVER['HTTP_X_FORWARDED_FOR'] ) );
+		} elseif ( ! empty( $_SERVER['REMOTE_ADDR'] ) ) {
 			$ip = sanitize_text_field( wp_unslash( $_SERVER['REMOTE_ADDR'] ) );
 		}
 		
@@ -86,556 +108,464 @@ class SCF_Core {
 	}
 
 	/**
-	 * Get session ID
-	 *
-	 * @return string Session ID
+	 * Handle consent submission
 	 */
-	private function get_session_id() {
-		if ( ! session_id() ) {
-			session_start();
+	public function handle_consent_submission() {
+		if ( ! isset( $_POST['scf_consent_action'] ) ) {
+			return;
 		}
-		return session_id();
-	}
-
-	/**
-	 * Generate random field name for URL honeypot
-	 *
-	 * @return string Random field name
-	 */
-	private function generate_honeypot_name() {
-		return 'user_websirsite_URL_' . wp_rand( 1000, 9999 );
-	}
-
-	/**
-	 * Render contact form
-	 *
-	 * @return string Form HTML
-	 */
-	public function render_form() {
-		$settings = $this->get_settings();
-		$ip = $this->get_user_ip();
 		
-		// Check IP consent
-		$has_consented = $this->database->has_ip_consented( $ip );
-		
-		// Generate timestamp and honeypot name
-		$timestamp = time();
-		$honeypot_url_name = $this->generate_honeypot_name();
-		
-		// Store in session
-		if ( ! session_id() ) {
-			session_start();
+		if ( ! isset( $_POST['scf_consent_nonce'] ) || 
+		     ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['scf_consent_nonce'] ) ), 'scf_consent' ) ) {
+			return;
 		}
-		$_SESSION['scf_timestamp'] = $timestamp;
-		$_SESSION['scf_honeypot_url'] = $honeypot_url_name;
 		
-		ob_start();
-		?>
-		<div class="scf-wrapper" style="
-			background-color: <?php echo esc_attr( $settings['form_bg_color'] ); ?>;
-			border: 2px solid <?php echo esc_attr( $settings['form_border_color'] ); ?>;
-			border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-			color: <?php echo esc_attr( $settings['form_text_color'] ); ?>;
-			padding: 30px;
-			max-width: 600px;
-			margin: 0 auto;
-		">
-			<?php if ( ! $has_consented ) : ?>
-				<div class="scf-consent-required" style="
-					background-color: #fff3cd;
-					border: 1px solid #ffc107;
-					border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-					padding: 20px;
-					margin-bottom: 20px;
-				">
-					<h3 style="margin-top: 0;"><?php esc_html_e( 'Privacy Consent Required', 'secure-contact-form' ); ?></h3>
-					<p><?php esc_html_e( 'Before using this contact form, you must first agree to our Privacy Policy.', 'secure-contact-form' ); ?></p>
-					
-					<form method="post" action="">
-						<?php wp_nonce_field( 'scf_consent', 'scf_consent_nonce' ); ?>
-						<input type="hidden" name="scf_action" value="consent" />
-						
-						<label style="display: block; margin-bottom: 15px;">
-							<input type="checkbox" name="scf_consent_checkbox" value="1" required />
-							<?php
-							if ( ! empty( $settings['privacy_link'] ) ) {
-								printf(
-									/* translators: %s: privacy policy URL */
-									esc_html__( 'I have read and agree to the %s', 'secure-contact-form' ),
-									'<a href="' . esc_url( $settings['privacy_link'] ) . '" target="_blank">' . esc_html__( 'Privacy Policy', 'secure-contact-form' ) . '</a>'
-								);
-							} else {
-								echo esc_html( $settings['privacy_label'] );
-							}
-							?>
-						</label>
-						
-						<button type="submit" style="
-							background-color: <?php echo esc_attr( $settings['button_bg_color'] ); ?>;
-							color: <?php echo esc_attr( $settings['button_text_color'] ); ?>;
-							border: none;
-							border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-							padding: 12px 24px;
-							cursor: pointer;
-							font-size: 16px;
-						"><?php esc_html_e( 'Accept and Continue', 'secure-contact-form' ); ?></button>
-					</form>
-				</div>
-			<?php else : ?>
-				
-				<?php if ( isset( $_SESSION['scf_message'] ) ) : ?>
-					<div class="scf-message <?php echo esc_attr( $_SESSION['scf_message_type'] ); ?>" style="
-						background-color: <?php echo $_SESSION['scf_message_type'] === 'success' ? '#d4edda' : '#f8d7da'; ?>;
-						border: 1px solid <?php echo $_SESSION['scf_message_type'] === 'success' ? '#c3e6cb' : '#f5c6cb'; ?>;
-						border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-						padding: 15px;
-						margin-bottom: 20px;
-					">
-						<?php echo esc_html( $_SESSION['scf_message'] ); ?>
-					</div>
-					<?php
-					unset( $_SESSION['scf_message'] );
-					unset( $_SESSION['scf_message_type'] );
-					?>
-				<?php endif; ?>
-				
-				<form method="post" action="" class="scf-form">
-					<?php wp_nonce_field( 'scf_submit', 'scf_nonce' ); ?>
-					<input type="hidden" name="scf_action" value="submit" />
-					<input type="hidden" name="scf_timestamp" value="<?php echo esc_attr( $timestamp ); ?>" />
-					
-					<!-- Traditional Hidden Honeypot -->
-					<div style="position: absolute; opacity: 0; z-index: -5;">
-						<label for="name"><?php esc_html_e( 'Name', 'secure-contact-form' ); ?></label>
-						<input type="text" name="name" id="name" tabindex="-1" autocomplete="off" />
-					</div>
-					
-					<!-- Dynamic URL Honeypot -->
-					<div style="display: none;">
-						<label for="<?php echo esc_attr( $honeypot_url_name ); ?>"><?php esc_html_e( 'Website', 'secure-contact-form' ); ?></label>
-						<input type="url" name="<?php echo esc_attr( $honeypot_url_name ); ?>" id="<?php echo esc_attr( $honeypot_url_name ); ?>" tabindex="-1" />
-					</div>
-					
-					<?php if ( '1' === $settings['enable_name'] ) : ?>
-					<div class="scf-field" style="margin-bottom: 20px;">
-						<label for="scf_real_name" style="
-							display: block;
-							margin-bottom: 8px;
-							font-weight: 600;
-						"><?php echo esc_html( $settings['name_label'] ); ?></label>
-						<input 
-							type="text" 
-							name="scf_real_name" 
-							id="scf_real_name"
-							placeholder="<?php echo esc_attr( $settings['name_placeholder'] ); ?>"
-							style="
-								width: 100%;
-								padding: 12px;
-								border: 1px solid <?php echo esc_attr( $settings['form_border_color'] ); ?>;
-								border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-								box-sizing: border-box;
-							"
-						/>
-					</div>
-					<?php endif; ?>
-					
-					<?php if ( '1' === $settings['enable_email'] ) : ?>
-					<div class="scf-field" style="margin-bottom: 20px;">
-						<label for="scf_email" style="
-							display: block;
-							margin-bottom: 8px;
-							font-weight: 600;
-						"><?php echo esc_html( $settings['email_label'] ); ?></label>
-						<input 
-							type="email" 
-							name="scf_email" 
-							id="scf_email"
-							placeholder="<?php echo esc_attr( $settings['email_placeholder'] ); ?>"
-							style="
-								width: 100%;
-								padding: 12px;
-								border: 1px solid <?php echo esc_attr( $settings['form_border_color'] ); ?>;
-								border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-								box-sizing: border-box;
-							"
-						/>
-					</div>
-					<?php endif; ?>
-					
-					<?php if ( '1' === $settings['enable_phone'] ) : ?>
-					<div class="scf-field" style="margin-bottom: 20px;">
-						<label for="scf_phone" style="
-							display: block;
-							margin-bottom: 8px;
-							font-weight: 600;
-						"><?php echo esc_html( $settings['phone_label'] ); ?></label>
-						<input 
-							type="tel" 
-							name="scf_phone" 
-							id="scf_phone"
-							placeholder="<?php echo esc_attr( $settings['phone_placeholder'] ); ?>"
-							style="
-								width: 100%;
-								padding: 12px;
-								border: 1px solid <?php echo esc_attr( $settings['form_border_color'] ); ?>;
-								border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-								box-sizing: border-box;
-							"
-						/>
-					</div>
-					<?php endif; ?>
-					
-					<?php if ( '1' === $settings['enable_dropdown'] ) : ?>
-						<?php
-						$has_options = false;
-						for ( $i = 1; $i <= 5; $i++ ) {
-							if ( ! empty( $settings[ 'dropdown_option_' . $i ] ) ) {
-								$has_options = true;
-								break;
-							}
-						}
-						?>
-						<?php if ( $has_options ) : ?>
-						<div class="scf-field" style="margin-bottom: 20px;">
-							<label for="scf_dropdown" style="
-								display: block;
-								margin-bottom: 8px;
-								font-weight: 600;
-							"><?php echo esc_html( $settings['dropdown_label'] ); ?></label>
-							<select 
-								name="scf_dropdown" 
-								id="scf_dropdown"
-								style="
-									width: 100%;
-									padding: 12px;
-									border: 1px solid <?php echo esc_attr( $settings['form_border_color'] ); ?>;
-									border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-									box-sizing: border-box;
-								"
-							>
-								<option value=""><?php esc_html_e( 'Select an option', 'secure-contact-form' ); ?></option>
-								<?php for ( $i = 1; $i <= 5; $i++ ) : ?>
-									<?php if ( ! empty( $settings[ 'dropdown_option_' . $i ] ) ) : ?>
-										<option value="<?php echo esc_attr( $settings[ 'dropdown_option_' . $i ] ); ?>">
-											<?php echo esc_html( $settings[ 'dropdown_option_' . $i ] ); ?>
-										</option>
-									<?php endif; ?>
-								<?php endfor; ?>
-							</select>
-						</div>
-						<?php endif; ?>
-					<?php endif; ?>
-					
-					<!-- Subject field with name="honeypot" for confusion -->
-					<div class="scf-field" style="margin-bottom: 20px;">
-						<label for="honeypot" style="
-							display: block;
-							margin-bottom: 8px;
-							font-weight: 600;
-						"><?php echo esc_html( $settings['subject_label'] ); ?> <span style="color: red;">*</span></label>
-						<input 
-							type="text" 
-							name="honeypot" 
-							id="honeypot"
-							placeholder="<?php echo esc_attr( $settings['subject_placeholder'] ); ?>"
-							required
-							style="
-								width: 100%;
-								padding: 12px;
-								border: 1px solid <?php echo esc_attr( $settings['form_border_color'] ); ?>;
-								border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-								box-sizing: border-box;
-							"
-						/>
-					</div>
-					
-					<div class="scf-field" style="margin-bottom: 20px;">
-						<label for="scf_message" style="
-							display: block;
-							margin-bottom: 8px;
-							font-weight: 600;
-						"><?php echo esc_html( $settings['message_label'] ); ?> <span style="color: red;">*</span></label>
-						<textarea 
-							name="scf_message" 
-							id="scf_message"
-							placeholder="<?php echo esc_attr( $settings['message_placeholder'] ); ?>"
-							rows="6"
-							required
-							style="
-								width: 100%;
-								padding: 12px;
-								border: 1px solid <?php echo esc_attr( $settings['form_border_color'] ); ?>;
-								border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-								box-sizing: border-box;
-								resize: vertical;
-							"
-						></textarea>
-					</div>
-					
-					<?php if ( '1' === $settings['enable_security_question'] ) : ?>
-					<div class="scf-field" style="margin-bottom: 20px;">
-						<label for="scf_security" style="
-							display: block;
-							margin-bottom: 8px;
-							font-weight: 600;
-						"><?php echo esc_html( $settings['security_question'] ); ?> <span style="color: red;">*</span></label>
-						<input 
-							type="text" 
-							name="scf_security" 
-							id="scf_security"
-							required
-							style="
-								width: 100%;
-								padding: 12px;
-								border: 1px solid <?php echo esc_attr( $settings['form_border_color'] ); ?>;
-								border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-								box-sizing: border-box;
-							"
-						/>
-					</div>
-					<?php endif; ?>
-					
-					<div style="margin-bottom: 20px;">
-						<button type="submit" style="
-							background-color: <?php echo esc_attr( $settings['button_bg_color'] ); ?>;
-							color: <?php echo esc_attr( $settings['button_text_color'] ); ?>;
-							border: none;
-							border-radius: <?php echo esc_attr( $settings['border_radius'] ); ?>px;
-							padding: 12px 24px;
-							cursor: pointer;
-							font-size: 16px;
-							width: 100%;
-						"><?php esc_html_e( 'Send Message', 'secure-contact-form' ); ?></button>
-					</div>
-				</form>
-			<?php endif; ?>
-		</div>
-		<?php
-		return ob_get_clean();
+		$ip_address = $this->get_user_ip();
+		if ( empty( $ip_address ) ) {
+			return;
+		}
+		
+		if ( isset( $_POST['scf_privacy_consent'] ) && '1' === $_POST['scf_privacy_consent'] ) {
+			$this->database->record_consent( $ip_address );
+		}
+		
+		wp_safe_redirect( remove_query_arg( array( 'scf_consent_action', 'scf_consent_nonce', 'scf_privacy_consent' ) ) );
+		exit;
 	}
 
 	/**
 	 * Handle form submission
 	 */
 	public function handle_form_submission() {
-		if ( ! isset( $_POST['scf_action'] ) ) {
+		if ( ! isset( $_POST['scf_submit'] ) ) {
 			return;
-		}
-
-		if ( 'consent' === $_POST['scf_action'] ) {
-			$this->handle_consent_submission();
-		} elseif ( 'submit' === $_POST['scf_action'] ) {
-			$this->handle_contact_submission();
-		}
-	}
-
-	/**
-	 * Handle consent submission
-	 */
-	private function handle_consent_submission() {
-		if ( ! isset( $_POST['scf_consent_nonce'] ) || 
-		     ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['scf_consent_nonce'] ) ), 'scf_consent' ) ) {
-			return;
-		}
-
-		if ( ! isset( $_POST['scf_consent_checkbox'] ) ) {
-			return;
-		}
-
-		$ip = $this->get_user_ip();
-		if ( empty( $ip ) ) {
-			return;
-		}
-
-		$result = $this->database->record_consent( $ip );
-		
-		if ( ! session_id() ) {
-			session_start();
 		}
 		
-		if ( is_wp_error( $result ) ) {
-			$_SESSION['scf_message'] = __( 'Failed to record consent. Please try again.', 'secure-contact-form' );
-			$_SESSION['scf_message_type'] = 'error';
-		}
-
-		wp_safe_redirect( wp_get_referer() );
-		exit;
-	}
-
-	/**
-	 * Handle contact form submission
-	 */
-	private function handle_contact_submission() {
-		if ( ! session_id() ) {
-			session_start();
-		}
-
 		// Verify nonce
 		if ( ! isset( $_POST['scf_nonce'] ) || 
-		     ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['scf_nonce'] ) ), 'scf_submit' ) ) {
-			$_SESSION['scf_message'] = __( 'Security check failed.', 'secure-contact-form' );
-			$_SESSION['scf_message_type'] = 'error';
-			wp_safe_redirect( wp_get_referer() );
-			exit;
+		     ! wp_verify_nonce( sanitize_text_field( wp_unslash( $_POST['scf_nonce'] ) ), 'scf_submit_form' ) ) {
+			wp_die( esc_html__( 'Security check failed', 'secure-contact-form' ) );
 		}
-
+		
 		$settings = $this->get_settings();
-		$ip = $this->get_user_ip();
-		$session = $this->get_session_id();
-
-		// Check IP consent
-		if ( ! $this->database->has_ip_consented( $ip ) ) {
-			$_SESSION['scf_message'] = __( 'You must accept the Privacy Policy first.', 'secure-contact-form' );
-			$_SESSION['scf_message_type'] = 'error';
-			wp_safe_redirect( wp_get_referer() );
-			exit;
+		$errors   = array();
+		
+		// Get IP address
+		$ip_address = $this->get_user_ip();
+		
+		// Check if consent is required and given
+		if ( ! $this->database->has_consent( $ip_address ) ) {
+			$errors[] = __( 'Please accept the Privacy Policy before submitting.', 'secure-contact-form' );
 		}
-
-		// Check rate limit
-		if ( ! $this->database->check_rate_limit( $ip, $session ) ) {
-			$_SESSION['scf_message'] = __( 'Too many submissions. Please try again later.', 'secure-contact-form' );
-			$_SESSION['scf_message_type'] = 'error';
-			wp_safe_redirect( wp_get_referer() );
-			exit;
+		
+		// Check rate limiting
+		$max_attempts    = (int) ( $settings['rate_limit_max'] ?? 5 );
+		$window_minutes  = (int) ( $settings['rate_limit_window'] ?? 60 );
+		
+		if ( ! $this->database->check_rate_limit( $ip_address, $max_attempts, $window_minutes ) ) {
+			$errors[] = __( 'You have submitted too many forms. Please try again later.', 'secure-contact-form' );
 		}
-
-		// Anti-spam: Traditional honeypot
+		
+		// Validate honeypots
+		// Traditional honeypot (should be empty)
 		if ( ! empty( $_POST['name'] ) ) {
-			wp_safe_redirect( wp_get_referer() );
-			exit;
+			$errors[] = __( 'Spam detected', 'secure-contact-form' );
 		}
-
-		// Anti-spam: Dynamic URL honeypot
-		if ( isset( $_SESSION['scf_honeypot_url'] ) ) {
-			$honeypot_field = $_SESSION['scf_honeypot_url'];
-			if ( ! empty( $_POST[ $honeypot_field ] ) ) {
-				wp_safe_redirect( wp_get_referer() );
-				exit;
+		
+		// Dynamic URL honeypot (should be empty)
+		foreach ( $_POST as $key => $value ) {
+			if ( strpos( $key, 'website_URL_' ) === 0 && ! empty( $value ) ) {
+				$errors[] = __( 'Spam detected', 'secure-contact-form' );
 			}
 		}
-
-		// Anti-spam: Time-based validation
-		if ( isset( $_POST['scf_timestamp'] ) && isset( $_SESSION['scf_timestamp'] ) ) {
-			$form_time = intval( $_POST['scf_timestamp'] );
-			$session_time = intval( $_SESSION['scf_timestamp'] );
-			$elapsed = time() - $session_time;
-			$min_time = intval( $settings['min_submit_time'] );
-
-			if ( $form_time !== $session_time || $elapsed < $min_time ) {
-				$_SESSION['scf_message'] = __( 'Submission too fast. Please wait a moment.', 'secure-contact-form' );
-				$_SESSION['scf_message_type'] = 'error';
-				wp_safe_redirect( wp_get_referer() );
-				exit;
+		
+		// Time-based validation
+		$min_time = (int) ( $settings['min_submission_time'] ?? 3 );
+		if ( isset( $_SESSION['scf_form_load_time'] ) ) {
+			$elapsed = time() - $_SESSION['scf_form_load_time'];
+			if ( $elapsed < $min_time ) {
+				$errors[] = __( 'Form submitted too quickly. Please try again.', 'secure-contact-form' );
 			}
 		}
-
-		// Anti-spam: Security question
-		if ( '1' === $settings['enable_security_question'] ) {
-			if ( ! isset( $_POST['scf_security'] ) ) {
-				$_SESSION['scf_message'] = __( 'Please answer the security question.', 'secure-contact-form' );
-				$_SESSION['scf_message_type'] = 'error';
-				wp_safe_redirect( wp_get_referer() );
-				exit;
-			}
-
-			$user_answer = sanitize_text_field( wp_unslash( $_POST['scf_security'] ) );
-			$correct_answer = $settings['security_answer'];
-
-			if ( strcasecmp( trim( $user_answer ), trim( $correct_answer ) ) !== 0 ) {
-				$_SESSION['scf_message'] = __( 'Security question answer is incorrect.', 'secure-contact-form' );
-				$_SESSION['scf_message_type'] = 'error';
-				wp_safe_redirect( wp_get_referer() );
-				exit;
+		
+		// Validate security question
+		if ( '1' === ( $settings['enable_security_question'] ?? '0' ) ) {
+			$security_answer = isset( $_POST['scf_security_answer'] ) ? sanitize_text_field( wp_unslash( $_POST['scf_security_answer'] ) ) : '';
+			$correct_answer  = $settings['security_answer'] ?? '';
+			
+			if ( strcasecmp( trim( $security_answer ), trim( $correct_answer ) ) !== 0 ) {
+				$errors[] = __( 'Security answer is incorrect.', 'secure-contact-form' );
 			}
 		}
-
+		
 		// Validate required fields
-		if ( ! isset( $_POST['honeypot'] ) || empty( $_POST['honeypot'] ) ) {
-			$_SESSION['scf_message'] = __( 'Subject is required.', 'secure-contact-form' );
-			$_SESSION['scf_message_type'] = 'error';
+		$subject = isset( $_POST['honeypot'] ) ? sanitize_text_field( wp_unslash( $_POST['honeypot'] ) ) : '';
+		$message = isset( $_POST['scf_message'] ) ? sanitize_textarea_field( wp_unslash( $_POST['scf_message'] ) ) : '';
+		
+		if ( empty( $subject ) ) {
+			$errors[] = __( 'Subject is required.', 'secure-contact-form' );
+		}
+		
+		if ( empty( $message ) ) {
+			$errors[] = __( 'Message is required.', 'secure-contact-form' );
+		}
+		
+		// Validate optional fields
+		$form_data = array();
+		
+		if ( '1' === ( $settings['enable_name'] ?? '0' ) ) {
+			$form_data['name'] = isset( $_POST['scf_name'] ) ? sanitize_text_field( wp_unslash( $_POST['scf_name'] ) ) : '';
+		}
+		
+		if ( '1' === ( $settings['enable_email'] ?? '0' ) ) {
+			$email = isset( $_POST['scf_email'] ) ? sanitize_email( wp_unslash( $_POST['scf_email'] ) ) : '';
+			if ( ! empty( $email ) && ! is_email( $email ) ) {
+				$errors[] = __( 'Invalid email address.', 'secure-contact-form' );
+			}
+			$form_data['email'] = $email;
+		}
+		
+		if ( '1' === ( $settings['enable_phone'] ?? '0' ) ) {
+			$form_data['phone'] = isset( $_POST['scf_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['scf_phone'] ) ) : '';
+		}
+		
+		if ( '1' === ( $settings['enable_dropdown'] ?? '0' ) ) {
+			$form_data['dropdown'] = isset( $_POST['scf_dropdown'] ) ? sanitize_text_field( wp_unslash( $_POST['scf_dropdown'] ) ) : '';
+		}
+		
+		if ( ! empty( $errors ) ) {
+			$_SESSION['scf_errors']    = $errors;
+			$_SESSION['scf_form_data'] = array_merge( $form_data, array( 'subject' => $subject, 'message' => $message ) );
 			wp_safe_redirect( wp_get_referer() );
 			exit;
 		}
-
-		if ( ! isset( $_POST['scf_message'] ) || empty( $_POST['scf_message'] ) ) {
-			$_SESSION['scf_message'] = __( 'Message is required.', 'secure-contact-form' );
-			$_SESSION['scf_message_type'] = 'error';
-			wp_safe_redirect( wp_get_referer() );
-			exit;
-		}
-
-		// Sanitize data
-		$subject = sanitize_text_field( wp_unslash( $_POST['honeypot'] ) );
-		$message = sanitize_textarea_field( wp_unslash( $_POST['scf_message'] ) );
-		$name = isset( $_POST['scf_real_name'] ) ? sanitize_text_field( wp_unslash( $_POST['scf_real_name'] ) ) : '';
-		$email = isset( $_POST['scf_email'] ) ? sanitize_email( wp_unslash( $_POST['scf_email'] ) ) : '';
-		$phone = isset( $_POST['scf_phone'] ) ? sanitize_text_field( wp_unslash( $_POST['scf_phone'] ) ) : '';
-		$dropdown = isset( $_POST['scf_dropdown'] ) ? sanitize_text_field( wp_unslash( $_POST['scf_dropdown'] ) ) : '';
-
-		// Build email body
-		$email_body = "New contact form submission\n\n";
 		
-		if ( ! empty( $name ) ) {
-			$email_body .= "Name: {$name}\n";
-		}
-		if ( ! empty( $email ) ) {
-			$email_body .= "Email: {$email}\n";
-		}
-		if ( ! empty( $phone ) ) {
-			$email_body .= "Phone: {$phone}\n";
-		}
-		if ( ! empty( $dropdown ) ) {
-			$email_body .= "Selection: {$dropdown}\n";
-		}
+		// Send email
+		$recipients    = $settings['email_recipients'] ?? get_option( 'admin_email' );
+		$email_method  = $settings['email_method'] ?? 'wp_mail';
+		$email_list    = array_map( 'trim', explode( ',', $recipients ) );
+		$email_list    = array_slice( $email_list, 0, 3 ); // Max 3 recipients
 		
-		$email_body .= "Subject: {$subject}\n\n";
-		$email_body .= "Message:\n{$message}\n\n";
-		$email_body .= "---\n";
-		$email_body .= "Submitted from: " . home_url() . "\n";
-		$email_body .= "IP Address: {$ip}\n";
-		$email_body .= "Timestamp: " . current_time( 'mysql' );
-
-		// Get recipients
-		$recipients = array();
-		for ( $i = 1; $i <= 3; $i++ ) {
-			$recipient = $settings[ 'recipient_email_' . $i ];
-			if ( ! empty( $recipient ) && is_email( $recipient ) ) {
-				$recipients[] = $recipient;
+		$email_subject = sprintf(
+			/* translators: %s: Subject from form */
+			__( '[Contact Form] %s', 'secure-contact-form' ),
+			$subject
+		);
+		
+		$email_body = $this->build_email_body( $form_data, $subject, $message );
+		
+		$sent = false;
+		if ( 'php_mail' === $email_method ) {
+			foreach ( $email_list as $recipient ) {
+				if ( is_email( $recipient ) ) {
+					// phpcs:ignore WordPress.PHP.DiscouragedPHPFunctions.runtime_configuration_mail
+					$sent = mail( $recipient, $email_subject, $email_body );
+				}
+			}
+		} else {
+			$headers = array( 'Content-Type: text/plain; charset=UTF-8' );
+			foreach ( $email_list as $recipient ) {
+				if ( is_email( $recipient ) ) {
+					$sent = wp_mail( $recipient, $email_subject, $email_body, $headers );
+				}
 			}
 		}
-
-		if ( empty( $recipients ) ) {
-			$_SESSION['scf_message'] = __( 'No valid recipient email configured.', 'secure-contact-form' );
-			$_SESSION['scf_message_type'] = 'error';
-			wp_safe_redirect( wp_get_referer() );
-			exit;
-		}
-
-		// Send email
-		$email_sent = false;
-		$headers = array( 'Content-Type: text/plain; charset=UTF-8' );
 		
-		if ( ! empty( $email ) ) {
-			$headers[] = 'Reply-To: ' . $email;
-		}
-
-		if ( 'wp_mail' === $settings['email_method'] ) {
-			$email_sent = wp_mail( $recipients, $subject, $email_body, $headers );
-		} else {
-			$to = implode( ', ', $recipients );
-			$email_sent = mail( $to, $subject, $email_body, implode( "\r\n", $headers ) );
-		}
-
-		if ( $email_sent ) {
-			$this->database->record_submission( $ip, $session );
-			$_SESSION['scf_message'] = __( 'Thank you! Your message has been sent successfully.', 'secure-contact-form' );
-			$_SESSION['scf_message_type'] = 'success';
-		} else {
-			$_SESSION['scf_message'] = __( 'Failed to send email. Please try again later.', 'secure-contact-form' );
-			$_SESSION['scf_message_type'] = 'error';
-		}
-
+		// Record submission
+		$this->database->record_submission( $ip_address );
+		
+		// Clear form data and set success message
+		unset( $_SESSION['scf_form_data'] );
+		$_SESSION['scf_success'] = __( 'Thank you! Your message has been sent successfully.', 'secure-contact-form' );
+		
 		wp_safe_redirect( wp_get_referer() );
 		exit;
+	}
+
+	/**
+	 * Build email body
+	 *
+	 * @param array  $form_data Form data
+	 * @param string $subject Subject
+	 * @param string $message Message
+	 * @return string
+	 */
+	private function build_email_body( $form_data, $subject, $message ) {
+		$body = __( 'New contact form submission:', 'secure-contact-form' ) . "\n\n";
+		
+		$body .= __( 'Subject:', 'secure-contact-form' ) . ' ' . $subject . "\n";
+		
+		if ( ! empty( $form_data['name'] ) ) {
+			$body .= __( 'Name:', 'secure-contact-form' ) . ' ' . $form_data['name'] . "\n";
+		}
+		
+		if ( ! empty( $form_data['email'] ) ) {
+			$body .= __( 'Email:', 'secure-contact-form' ) . ' ' . $form_data['email'] . "\n";
+		}
+		
+		if ( ! empty( $form_data['phone'] ) ) {
+			$body .= __( 'Phone:', 'secure-contact-form' ) . ' ' . $form_data['phone'] . "\n";
+		}
+		
+		if ( ! empty( $form_data['dropdown'] ) ) {
+			$body .= __( 'Selected Option:', 'secure-contact-form' ) . ' ' . $form_data['dropdown'] . "\n";
+		}
+		
+		$body .= "\n" . __( 'Message:', 'secure-contact-form' ) . "\n" . $message;
+		
+		return $body;
+	}
+
+	/**
+	 * Render shortcode
+	 *
+	 * @param array $atts Shortcode attributes
+	 * @return string
+	 */
+	public function render_shortcode( $atts ) {
+		$settings   = $this->get_settings();
+		$ip_address = $this->get_user_ip();
+		
+		// Store form load time for time-based validation
+		if ( ! isset( $_SESSION['scf_form_load_time'] ) ) {
+			$_SESSION['scf_form_load_time'] = time();
+		}
+		
+		// Check if consent is needed
+		if ( ! $this->database->has_consent( $ip_address ) ) {
+			return $this->render_consent_form( $settings );
+		}
+		
+		return $this->render_contact_form( $settings );
+	}
+
+	/**
+	 * Render consent form
+	 *
+	 * @param array $settings Plugin settings
+	 * @return string
+	 */
+	private function render_consent_form( $settings ) {
+		$privacy_url = get_privacy_policy_url();
+		
+		ob_start();
+		?>
+		<div class="scf-consent-wrapper" style="
+			background-color: <?php echo esc_attr( $settings['form_bg_color'] ?? '#1a1a1a' ); ?>;
+			border: 2px solid <?php echo esc_attr( $settings['form_border_color'] ?? '#d11c1c' ); ?>;
+			border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;
+			color: <?php echo esc_attr( $settings['form_text_color'] ?? '#ffffff' ); ?>;
+		">
+			<div class="scf-consent-header">
+				<i class="fas fa-shield-alt"></i>
+				<h3><?php esc_html_e( 'Privacy Consent Required', 'secure-contact-form' ); ?></h3>
+			</div>
+			
+			<div class="scf-consent-content">
+				<p><?php esc_html_e( 'Before using this contact form, please review and accept our privacy policy.', 'secure-contact-form' ); ?></p>
+				
+				<form method="post" class="scf-consent-form">
+					<?php wp_nonce_field( 'scf_consent', 'scf_consent_nonce' ); ?>
+					<input type="hidden" name="scf_consent_action" value="1">
+					
+					<label class="scf-consent-checkbox">
+						<input type="checkbox" name="scf_privacy_consent" value="1" required>
+						<span>
+							<?php
+							if ( ! empty( $privacy_url ) ) {
+								printf(
+									/* translators: %s: Privacy policy link */
+									wp_kses_post( __( 'I have read and accept the <a href="%s" target="_blank">Privacy Policy</a>', 'secure-contact-form' ) ),
+									esc_url( $privacy_url )
+								);
+							} else {
+								esc_html_e( 'I accept the Privacy Policy', 'secure-contact-form' );
+							}
+							?>
+						</span>
+					</label>
+					
+					<button type="submit" class="scf-consent-button" style="
+						background-color: <?php echo esc_attr( $settings['button_bg_color'] ?? '#d11c1c' ); ?>;
+						color: <?php echo esc_attr( $settings['button_text_color'] ?? '#ffffff' ); ?>;
+						border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;
+					">
+						<i class="fas fa-check"></i>
+						<?php esc_html_e( 'Continue to Contact Form', 'secure-contact-form' ); ?>
+					</button>
+				</form>
+			</div>
+		</div>
+		<?php
+		return ob_get_clean();
+	}
+
+	/**
+	 * Render contact form
+	 *
+	 * @param array $settings Plugin settings
+	 * @return string
+	 */
+	private function render_contact_form( $settings ) {
+		// Get stored form data and errors
+		$form_data = isset( $_SESSION['scf_form_data'] ) ? $_SESSION['scf_form_data'] : array();
+		$errors    = isset( $_SESSION['scf_errors'] ) ? $_SESSION['scf_errors'] : array();
+		$success   = isset( $_SESSION['scf_success'] ) ? $_SESSION['scf_success'] : '';
+		
+		// Clear session data
+		unset( $_SESSION['scf_form_data'], $_SESSION['scf_errors'], $_SESSION['scf_success'] );
+		
+		// Generate random honeypot field name
+		$random_honeypot = 'website_URL_' . wp_rand( 1000, 9999 );
+		
+		ob_start();
+		?>
+		<div class="scf-form-wrapper" style="
+			background-color: <?php echo esc_attr( $settings['form_bg_color'] ?? '#1a1a1a' ); ?>;
+			border: 2px solid <?php echo esc_attr( $settings['form_border_color'] ?? '#d11c1c' ); ?>;
+			border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;
+			color: <?php echo esc_attr( $settings['form_text_color'] ?? '#ffffff' ); ?>;
+		">
+			<?php if ( ! empty( $errors ) ) : ?>
+				<div class="scf-errors">
+					<i class="fas fa-exclamation-triangle"></i>
+					<ul>
+						<?php foreach ( $errors as $error ) : ?>
+							<li><?php echo esc_html( $error ); ?></li>
+						<?php endforeach; ?>
+					</ul>
+				</div>
+			<?php endif; ?>
+			
+			<?php if ( ! empty( $success ) ) : ?>
+				<div class="scf-success">
+					<i class="fas fa-check-circle"></i>
+					<p><?php echo esc_html( $success ); ?></p>
+				</div>
+			<?php endif; ?>
+			
+			<form method="post" class="scf-contact-form" novalidate>
+				<?php wp_nonce_field( 'scf_submit_form', 'scf_nonce' ); ?>
+				
+				<!-- Traditional Honeypot (hidden with CSS) -->
+				<input type="text" name="name" class="scf-honeypot" tabindex="-1" autocomplete="off">
+				
+				<!-- Dynamic URL Honeypot -->
+				<input type="url" name="<?php echo esc_attr( $random_honeypot ); ?>" class="scf-url-honeypot" tabindex="-1" autocomplete="off">
+				
+				<?php if ( '1' === ( $settings['enable_name'] ?? '0' ) ) : ?>
+					<div class="scf-field">
+						<label for="scf_name"><?php echo esc_html( $settings['label_name'] ?? __( 'Name', 'secure-contact-form' ) ); ?></label>
+						<input type="text" 
+						       id="scf_name" 
+						       name="scf_name" 
+						       value="<?php echo esc_attr( $form_data['name'] ?? '' ); ?>"
+						       placeholder="<?php echo esc_attr( $settings['placeholder_name'] ?? '' ); ?>"
+						       style="border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;">
+					</div>
+				<?php endif; ?>
+				
+				<?php if ( '1' === ( $settings['enable_email'] ?? '0' ) ) : ?>
+					<div class="scf-field">
+						<label for="scf_email"><?php echo esc_html( $settings['label_email'] ?? __( 'Email', 'secure-contact-form' ) ); ?></label>
+						<input type="email" 
+						       id="scf_email" 
+						       name="scf_email" 
+						       value="<?php echo esc_attr( $form_data['email'] ?? '' ); ?>"
+						       placeholder="<?php echo esc_attr( $settings['placeholder_email'] ?? '' ); ?>"
+						       style="border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;">
+					</div>
+				<?php endif; ?>
+				
+				<?php if ( '1' === ( $settings['enable_phone'] ?? '0' ) ) : ?>
+					<div class="scf-field">
+						<label for="scf_phone"><?php echo esc_html( $settings['label_phone'] ?? __( 'Phone', 'secure-contact-form' ) ); ?></label>
+						<input type="tel" 
+						       id="scf_phone" 
+						       name="scf_phone" 
+						       value="<?php echo esc_attr( $form_data['phone'] ?? '' ); ?>"
+						       placeholder="<?php echo esc_attr( $settings['placeholder_phone'] ?? '' ); ?>"
+						       style="border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;">
+					</div>
+				<?php endif; ?>
+				
+				<?php if ( '1' === ( $settings['enable_dropdown'] ?? '0' ) ) : ?>
+					<div class="scf-field">
+						<label for="scf_dropdown"><?php echo esc_html( $settings['label_dropdown'] ?? __( 'Select Option', 'secure-contact-form' ) ); ?></label>
+						<select id="scf_dropdown" 
+						        name="scf_dropdown"
+						        style="border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;">
+							<option value=""><?php esc_html_e( 'Select...', 'secure-contact-form' ); ?></option>
+							<?php
+							$options = explode( "\n", $settings['dropdown_options'] ?? '' );
+							foreach ( $options as $option ) {
+								$option = trim( $option );
+								if ( ! empty( $option ) ) {
+									$selected = ( isset( $form_data['dropdown'] ) && $form_data['dropdown'] === $option ) ? ' selected' : '';
+									echo '<option value="' . esc_attr( $option ) . '"' . esc_attr( $selected ) . '>' . esc_html( $option ) . '</option>';
+								}
+							}
+							?>
+						</select>
+					</div>
+				<?php endif; ?>
+				
+				<div class="scf-field scf-field-required">
+					<label for="honeypot">
+						<?php echo esc_html( $settings['label_subject'] ?? __( 'Subject', 'secure-contact-form' ) ); ?>
+						<span class="scf-required">*</span>
+					</label>
+					<input type="text" 
+					       id="honeypot" 
+					       name="honeypot" 
+					       value="<?php echo esc_attr( $form_data['subject'] ?? '' ); ?>"
+					       placeholder="<?php echo esc_attr( $settings['placeholder_subject'] ?? '' ); ?>"
+					       required
+					       style="border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;">
+				</div>
+				
+				<div class="scf-field scf-field-required">
+					<label for="scf_message">
+						<?php echo esc_html( $settings['label_message'] ?? __( 'Message', 'secure-contact-form' ) ); ?>
+						<span class="scf-required">*</span>
+					</label>
+					<textarea id="scf_message" 
+					          name="scf_message" 
+					          rows="5" 
+					          placeholder="<?php echo esc_attr( $settings['placeholder_message'] ?? '' ); ?>"
+					          required
+					          style="border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;"><?php echo esc_textarea( $form_data['message'] ?? '' ); ?></textarea>
+				</div>
+				
+				<?php if ( '1' === ( $settings['enable_security_question'] ?? '0' ) ) : ?>
+					<div class="scf-field scf-field-required scf-security-question">
+						<label for="scf_security_answer">
+							<i class="fas fa-question-circle"></i>
+							<?php echo esc_html( $settings['security_question'] ?? __( 'Security Question', 'secure-contact-form' ) ); ?>
+							<span class="scf-required">*</span>
+						</label>
+						<input type="text" 
+						       id="scf_security_answer" 
+						       name="scf_security_answer" 
+						       required
+						       style="border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;">
+					</div>
+				<?php endif; ?>
+				
+				<button type="submit" 
+				        name="scf_submit" 
+				        class="scf-submit-button"
+				        style="
+				        	background-color: <?php echo esc_attr( $settings['button_bg_color'] ?? '#d11c1c' ); ?>;
+				        	color: <?php echo esc_attr( $settings['button_text_color'] ?? '#ffffff' ); ?>;
+				        	border-radius: <?php echo esc_attr( $settings['border_radius'] ?? '4' ); ?>px;
+				        ">
+					<i class="fas fa-paper-plane"></i>
+					<?php esc_html_e( 'Send Message', 'secure-contact-form' ); ?>
+				</button>
+			</form>
+		</div>
+		<?php
+		return ob_get_clean();
 	}
 }
