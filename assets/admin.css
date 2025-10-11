@@ -1,33 +1,73 @@
 /**
- * Admin styles for Secure Contact Form
- *
- * @package SecureContactForm
- * @since 1.0.0
+ * Secure Contact Form - Admin Styles
+ * Clean WordPress admin styling
  */
 
-.scf-tabs .nav-tab-wrapper {
-	margin-bottom: 0;
+.scf-admin-section {
+	margin-top: 30px;
+	padding-top: 20px;
+	border-top: 1px solid #dcdcde;
 }
 
-.scf-tab-content {
-	background: #fff;
-	border: 1px solid #ccd0d4;
-	border-top: none;
-	padding: 20px;
-}
-
-.scf-tab-content h2 {
+.scf-admin-section:first-child {
 	margin-top: 0;
 	padding-top: 0;
+	border-top: none;
 }
 
-.scf-admin-notice {
+.scf-color-picker {
+	max-width: 100px;
+}
+
+/* Tab content spacing */
+.nav-tab-wrapper {
+	margin-bottom: 30px;
+}
+
+/* Info boxes */
+.scf-info-box {
+	background: #f0f6fc;
+	border-left: 4px solid #2271b1;
+	padding: 15px;
+	margin: 20px 0;
+}
+
+.scf-warning-box {
+	background: #fcf0f1;
+	border-left: 4px solid #d63638;
+	padding: 15px;
+	margin: 20px 0;
+}
+
+.scf-success-box {
+	background: #f0f6f0;
+	border-left: 4px solid #00a32a;
+	padding: 15px;
+	margin: 20px 0;
+}
+
+/* Shortcode display */
+code {
+	background: #f0f0f1;
+	padding: 3px 8px;
+	border-radius: 3px;
+	font-family: 'Courier New', monospace;
 	font-size: 14px;
 }
 
-.scf-admin-notice code {
-	background: #f0f0f1;
-	padding: 2px 6px;
-	border-radius: 3px;
-	font-size: 13px;
+/* List styling in admin */
+.form-table ul {
+	margin: 10px 0;
+}
+
+.form-table ul li {
+	margin-bottom: 8px;
+	line-height: 1.5;
+}
+
+/* Responsive admin */
+@media screen and (max-width: 782px) {
+	.scf-color-picker {
+		max-width: 100%;
+	}
 }
